@@ -1,0 +1,28 @@
+# Calendar To Voice Flash Briefing
+
+service: Calendar2Voice
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+  stage: production
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+      Resource: "arn:aws:logs:*:*:*"
+
+functions:
+  calendar2voice:
+    handler: flashbriefing.calendar2voice
+    events:
+     - http: GET calendarasvoice
+
+package:
+  include:
+    - node_modules/**
+    - icsToJson.js

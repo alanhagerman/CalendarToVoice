@@ -1,0 +1,22 @@
+{
+  "name": "calendar2voice",
+  "version": "1.0.0",
+  "description": "Calendar2Voice",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ics-to-json": "^1.0.0",
+    "luxon": "^1.11.3",
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.23",
+    "request": "^2.88.0",
+    "rrule": "^2.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.0"
+  }
+}
