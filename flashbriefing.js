@@ -26,7 +26,7 @@ var moment = require('moment-timezone');
 // these are potentially passed a invocation variables
 // defaults
 var selectedCalendar = "cityofvb";
-var SKILLTITLE = 'Virginia Beach Pubic Meetings';
+var SKILLTITLE = 'Virginia Beach Public Meetings';
 var TIMEZONELIT = 'America/New_York';
 var ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
 var INTRO = " ";
@@ -73,7 +73,7 @@ function setupcalendar(whichcalendar) {
 	switch (whichcalendar.toLowerCase() ) {
 		case "cityofvb":
 		default:
-			SKILLTITLE = 'Virgini Beach Pubic Meetings';
+			SKILLTITLE = 'Virginia Beach Public Meetings';
 			TIMEZONELIT = 'America/New_York';
 			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
 			INTRO = "Public meetings for the City of Virginia Beach. "
