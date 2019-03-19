@@ -8,6 +8,9 @@
  *    calendar, will find any events for today and return them 
  *    to be read.  If there are no meetings for today, it will 
  *    read the next day that has meetings.
+ * 
+ * this iteration uses hardcoded internal calendar definitions
+ * next one will read from a dynamodb table
  * --------------------------------------------------------
  */
 
@@ -75,30 +78,60 @@ function setupcalendar(whichcalendar) {
 			CALEVENTTYPE = 'event';
 			break;
 
-		case "cityofnorfolk":
-			SKILLTITLE = 'Norfolk Public Meetings';
+		// Norfolk doesn't have a single public events calendar.  their boards and commissions calendar appears empty
+		// so this is the best we can do for now
+		case "cityofnorfolkvirginia":
+			SKILLTITLE = 'Norfolk Virginia City Council Meetings';
 			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=25&feed=calendar';
-			INTRO = "Public meetings for the City of Norfolk. "
+			ICSURL = 'http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar';
+			INTRO = "City Council meetings for the City of Norfolk, Virginia. "
+			WINDOWDAYS = 30;
+			CALTYPE = 'icalendar';
+			CALEVENTTYPE = 'meeting';
+			break;
+			
+		case "cityofvirginiabeachvirginia":
+		case "cityofvb":
+			SKILLTITLE = 'Virginia Beach Virginia Public Meetings';
+			TIMEZONELIT = 'America/New_York';
+			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
+			INTRO = "Public meetings for the City of Virginia Beach, Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
 			break;
 
-		case "cityofvb":
-		default:
-			SKILLTITLE = 'Virginia Beach Public Meetings';
+		case "cityofhamptonvirginia":
+			SKILLTITLE = 'Hampton Virginia Public Meetings';
 			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
-			INTRO = "Public meetings for the City of Virginia Beach. "
+			ICSURL = 'http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar';
+			INTRO = "Public meetings for the City of Hampton, Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
+			break;
+
+		case "cityofnewportnewsvirginia":
+			SKILLTITLE = 'Newport News Virginia Public Meetings';
+			TIMEZONELIT = 'America/New_York';
+			ICSURL = 'http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar';
+			INTRO = "Public meetings for the City of Newport News, Virginia. "
+			WINDOWDAYS = 30;
+			CALTYPE = 'icalendar';
+			CALEVENTTYPE = 'meeting';
+			break;
+
+	}
+	
+	if ( ICSURL.length > 0 ) {
+		moment.tz.setDefault(TIMEZONELIT);
+		todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
+		todayDate.startOf('day');
+		return true;
+	} else {
+		return false;
 	}
 
-	moment.tz.setDefault(TIMEZONELIT);
-	todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
-	todayDate.startOf('day');
 }
 
 /*
@@ -611,20 +644,10 @@ exports.calendar2voice = function(event, context, callback) {
 
 	responseJSON = createReturn(200,'The requested calendar is not available');
 
-	switch ( SELECTEDCALENDAR.toLowerCase() ) {
-		case "cityofvb":
-			setupcalendar(SELECTEDCALENDAR);
-			break;
-		
-		case "startwheelhr":
-			setupcalendar(SELECTEDCALENDAR);
-			break;
-
-		default:
-			// eslint-disable-next-line callback-return
-			callback(null, responseJSON);
-			return;
-
+	if ( ! setupcalendar(SELECTEDCALENDAR.toLowerCase() ) ) {
+		// eslint-disable-next-line callback-return
+		callback(null, responseJSON);
+		return;
 	}
 
 	// get the ICS via a promise so that we do not process without one
