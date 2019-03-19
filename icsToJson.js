@@ -10,6 +10,7 @@ const SUMMARY = "SUMMARY";
 const LOCATION = "LOCATION";
 const ALARM = "VALARM";
 const RRULE = "RRULE";
+const DURATION = "DURATION";
 
 const keyMap = {
   [START_DATE]: "startDate",
@@ -17,7 +18,8 @@ const keyMap = {
   [DESCRIPTION]: "description",
   [SUMMARY]: "summary",
   [LOCATION]: "location",
-  [RRULE]: "rrule"
+  [RRULE]: "rrule",
+  [DURATION]:""
 };
 
 const clean = string => unescape(string).trim();
@@ -84,7 +86,10 @@ function icsToJson (icsData )
       case RRULE:
         currentObj[keyMap[RRULE]] = clean(value);
         break;
-
+      case DURATION:
+        currentObj[keyMap[DURATION]] = clean(value);
+        break;
+        
       default:
         // eslint-disable-next-line no-continue
         continue;
