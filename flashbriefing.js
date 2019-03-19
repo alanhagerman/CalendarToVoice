@@ -28,7 +28,7 @@ var moment = require('moment-timezone');
 var SELECTEDCALENDAR = "";
 var SKILLTITLE = "";
 var TIMEZONELIT = 'America/New_York';
-var ICSURL = [];
+var ICSURL = "";
 var INTRO = "";
 var WINDOWDAYS = 30;
 var CALTYPE = 'icalendar';
@@ -45,6 +45,7 @@ const CALTYPEICAL = 'icalendar';
 var responsetext = "";
 var eventresponse = "";
 var responseJSON = "";
+var eventarray = [];
 
 // while looping through event snag the next day in future with events in case its needed
 var nextmeetingdate = {};
@@ -67,7 +68,7 @@ function setupcalendar(whichcalendar) {
 		case "startwheelhr":
 			SKILLTITLE = 'StartWheel Hampton Roads';
 			TIMEZONELIT = 'America/New_York';
-			ICSURL.push('https://startwheel.org/events/?ical=1&tribe_display=month');
+			ICSURL = 'https://startwheel.org/events/?ical=1&tribe_display=month';
 			INTRO = "Business events in Hampton Roads ";
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
@@ -77,8 +78,7 @@ function setupcalendar(whichcalendar) {
 		case "cityofnorfolk":
 			SKILLTITLE = 'Norfolk Public Meetings';
 			TIMEZONELIT = 'America/New_York';
-			ICSURL.push('http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=25&feed=calendar');
-			ICSURL.push('http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar');
+			ICSURL = 'http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=25&feed=calendar';
 			INTRO = "Public meetings for the City of Norfolk. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
@@ -89,7 +89,7 @@ function setupcalendar(whichcalendar) {
 		default:
 			SKILLTITLE = 'Virginia Beach Public Meetings';
 			TIMEZONELIT = 'America/New_York';
-			ICSURL.push('https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics');
+			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
 			INTRO = "Public meetings for the City of Virginia Beach. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
@@ -97,12 +97,7 @@ function setupcalendar(whichcalendar) {
 	}
 
 	moment.tz.setDefault(TIMEZONELIT);
-
-	if ( invokedDate > '') {
-		todayDate = moment.tz(invokedDate,TIMEZONELIT);
-	} else {
-		todayDate = moment.tz(TIMEZONELIT);
-	}
+	todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
 	todayDate.startOf('day');
 }
 
@@ -140,7 +135,7 @@ function eventTimeQualifier(startmomentobj,endmomentobj) {
 		endDiffinDays = -1;
 		console.log("Diff error:", e);
 	}
-	console.log("Diff in days is:" + startDiffinDays  + " and end:" + endDiffinDays + " with today:" + todayDate.format());
+	// console.log("Diff in days is:" + startDiffinDays  + " and end:" + endDiffinDays + " with today:" + todayDate.format());
 
 	if ( startDiffinDays > 0 ) {
 		return EVENTISFUTURE;
@@ -181,7 +176,7 @@ function returnNextEventDateFromRule(usedate,evtjson) {
 
 		// var userule = "DTSTART:" + usedate + "\ntzid:" + TIMEZONELIT + "\nRRULE:" + evtjson.rrule;
 		var userule = "DTSTART;TZID=" + TIMEZONELIT + ":" + usedate + "\nRRULE:" + evtjson.rrule;
-		console.log("Event Rule being processed:" + userule);
+		// console.log("Event Rule being processed:" + userule);
 
 		try {
 			eRule = rrule.rrulestr(userule);
@@ -191,13 +186,11 @@ function returnNextEventDateFromRule(usedate,evtjson) {
 
 			if ( aeventStartdates.length > 0 ) {
 				retDate = aeventStartdates[0].toString();
-				//console.log("usedate:]" + usedate + "[,  retDate:]" + retDate + "[");
 
 				// if the original date ended in Z then its a UTC Date, otherwise its local
 				if ( ! usedate.endsWith('Z') ) {
 					// original time was NOT UTC, Need to convert to local time
 					ltime = moment.utc(retDate).tz(TIMEZONELIT);
-					// console.log("Converted retDate:" + retDate + " to:" + ltime );
 					retDate = ltime.format();
 				}
 
@@ -210,10 +203,10 @@ function returnNextEventDateFromRule(usedate,evtjson) {
 		// no rule, so use the date given. It's always local time even if it has a Z on the end
 		ltime = moment(usedate);
 		retDate = ltime.format();
-		console.log("Converted usedate:" + usedate + " to moment:" + retDate + " without rule")
+		// console.log("Converted usedate:" + usedate + " to moment:" + retDate + " without rule")
 	}
 
-	console.log("Setting event date based on rule to:",retDate);
+	// console.log("Setting event date based on rule to:",retDate);
 	return retDate; 
 
 }
@@ -243,9 +236,6 @@ function fmt_icalendar(calobj, evtjson) {
 	
 	var retobj = calobj;
 	var evtEnd, evtLength, evtQualifier, evtStart, lrule, momentNextEndDate, momentNextStartDate, nexteventStartdate;
-
-	// console.log("initial object");
-	// console.log(util.inspect(retobj, {showHidden: false, depth: null}));
 
 	// need the evtjosn AND we need a summmary which describes the event otherwise skip it
 	if ( !evtjson || !evtjson.summary) {
@@ -380,14 +370,14 @@ function createeventobj(evtformat, evtjson) {
  * without the file.
  * --------------------------------------------------------
  */
-function getICS(idx) {
+function getICS(fromurl) {
 	
 	var request = require('request');
 
 	return new Promise((resolve,reject) => {
 		console.log ("Getting ICS");
 
-		request.get(ICSURL[idx], function (error, response, body) {
+		request.get(fromurl, function (error, response, body) {
 			if (!error && response.statusCode == 200) {
 				var iCal = body;
 				resolve(iCal);
@@ -424,17 +414,18 @@ function createReturn(stscode,responsetext) {
 	return response;
 }
 
-function select_todays_events() {
+/*
+ * --------------------------------------------------------
+ * function: select_todays_events
+ * purpose: select onlyt standard event objects for today
+ * --------------------------------------------------------
+ */
+function select_todays_events(jdata) {
+
+	let arTodaysEvents = [];
+	let stdevent = {};
 
 	try {
-
-		// events are not guaranteed to be sorted in the ics so we will need to support events for today by time
-		let aEventTimes = [];
-
-		// save the collection of objects that are todays events
-		let cTodaysEvents = {};
-		let stdevent = {};
-	
 		// look at each event.  Pull out ones for today AND save the next day that events
 		// occur just incase we need it since we're going through them all anyway
 		jdata.forEach(function (oneevent) {
@@ -449,15 +440,14 @@ function select_todays_events() {
 
 					// if its for today, save it so we can sort it
 					if ( stdevent.qualifier ==  EVENTSTARTSTODAY  || stdevent.qualifier ==  EVENTENDSTODAY || stdevent.qualifier ==  EVENTSPANSTODAY ) {
-						aEventTimes.push(stdevent.sortkey);
-						cTodaysEvents[stdevent.sortkey] = stdevent;
+						arTodaysEvents.push(stdevent);
 					} 
 
 					// wasnt a today event to be reported, is it a future date? If so is it closer than any other we've seen so far?
+					// nextmeetingdate is GLOBAL and was set based on the window we use for this calendar already
 					if (  stdevent.qualifier ==  EVENTISFUTURE ) {
 						let diffToday = nextmeetingdate.diff(todayDate,'days');
 						let diffevent = nextmeetingdate.diff(stdevent.nextStart,'days' );
-						console.log("Next day comparision is: from today:" + diffToday + " and from event:" + diffevent + " for date:" + nextmeetingdate.format());
 						if ( diffevent < diffToday && diffevent > 0 ) {
 							nextmeetingdate = stdevent.nextStart.clone();
 						}
@@ -468,19 +458,13 @@ function select_todays_events() {
 				} 
 			}
 
-		}); // foreachevent
-
-	
-		// if we have events from today, sort them and give them back as decent engrish
-		if ( aEventTimes.length > 0 ) {
-			
-		}
+		}); // foreach event
 	}
 	catch (e) {
 		console.log("Error setting object:",e)
 	}
 
-	return cTodaysEvents;
+	return arTodaysEvents;
 }
 
 /*
@@ -488,58 +472,50 @@ function select_todays_events() {
  * function: process_events.
  * 
  * Pick only the events that start/span/end on today to sort for reading back
- * While looping through them we also determine the next day in the future which 
- * has a start of event.  If a today event continues over to tomorrow its starting today
- * and therefore will be reported and we don't need to know the next day so we truly
- * can just lookout for the closest day in the future which has an event starting.
+ *
  * --------------------------------------------------------
  */
-function process_events(jdata) {
+function process_events(eventarray) {
 
 	let retmessage = "";
 
+	if ( eventarray.length > 0) {
 
+		// remember sort mutates the object
+		eventarray.sort( function(a,b) {
+			if ( a.sortkey > b.sortkey) return 1;
+			if ( b.sortkey > a.sortkey) return -1;
+			return 0;
+		});
 		
 		// build our response table for each event. Remember Flash Briefings do NOT support SSML! 
-		// Plain text only!
+		// we try to be smart with phrasing to sound more natural but ultimately we are at the mercy 
+		// of the source calendar
+		// !!! Plain text only!!!
 		let cnt = 1;
 		let lasteventStartdate = {};
 
-		aEventTimes.forEach(function (t) {
-			let oneevt = cTodaysEvents[t];
+		eventarray.forEach(function (oneevt) {
 
 			console.log(util.inspect(oneevt, {showHidden: false, depth: null}));
 
 			if ( oneevt.qualifier == EVENTSPANSTODAY ) {
-				eventresponse += "All day ";
-				if ( oneevt.evtEnd == todayDate ) {
-					eventresponse += " until " + oneevt.evtEnd.format('hh:mm A');
-				}
-				eventresponse += " is " + oneevt.summary + " ";
+				retmessage += "All day ";
+				retmessage += ( oneevt.evtEnd == todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
+				retmessage += " is " + oneevt.summary + " ";
 			} else {
-				if ( cnt > 1 && cnt == aEventTimes.length ) {
-					eventresponse += "Finally, ";
-				} 
-				
-				if ( lasteventStartdate ==  oneevt.eventStart.format('hh:mm A') ) {
-					eventresponse += "Also at ";
-				} else {
-					eventresponse += "At ";
-				}
+				retmessage +=  ( cnt > 1 && cnt == eventarray.length ) ?	"Finally, " : "";
+				retmessage +=  ( lasteventStartdate == oneevt.eventStart.format('hh:mm A') ) ? "Also at " : "At ";
 
 				if (oneevt.eventStart.hour() == 0 && oneevt.eventStart.minute() == 0) {
-					eventresponse += " midnight ";
+					retmessage += " midnight ";
 				} else if (oneevt.eventStart.hour() == 12 && oneevt.eventStart.minute() == 0) {
-					eventresponse += " noon ";
+					retmessage += " noon ";
 				} else {
-					eventresponse += oneevt.eventStart.format('hh:mm A');
+					retmessage += oneevt.eventStart.format('hh:mm A');
 				}
 			
-				if ( CALEVENTTYPE == 'meeting') {
-					eventresponse +=  ", the " + oneevt.summary + " meets. ";
-				} else {
-					eventresponse += ",  is " + oneevt.summary + ". ";
-				}
+				retmessage +=  ( CALEVENTTYPE == 'meeting') ? ", the " + oneevt.summary + " meets. " : ", is " + oneevt.summary + ". ";
 
 			}
 			cnt += 1;
@@ -548,6 +524,8 @@ function process_events(jdata) {
 			}
 		});
 	}
+
+	return retmessage;
 
 }
 
@@ -649,19 +627,18 @@ exports.calendar2voice = function(event, context, callback) {
 
 	}
 
-	// the response eventually returned to Alexa
-
 	// get the ICS via a promise so that we do not process without one
-	getICS(0).then( (caldata)  =>  {
+	getICS(ICSURL).then( (caldata)  =>  {
 
-		// convert the ical event into a JSON structure
-		const jdata = ics2json.icsToJson(caldata);
+		try {
+			const jdata = ics2json.icsToJson(caldata);
+			eventarray = select_todays_events(jdata);
+			eventresponse = process_events(eventarray);
+		}
+		catch (e) {
+			eventresponse = "";
+		}
 	
-
-
-		eventresponse = process_events(jdata);
-		
-
 		responsetext = INTRO + "For today, " + todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
 
 		if ( eventresponse == "" ) {
@@ -672,10 +649,10 @@ exports.calendar2voice = function(event, context, callback) {
 			responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
 			responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
 		} else {
-			if ( aEventTimes.length == 1) {
+			if ( eventarray.length == 1) {
 				responsetext += ( CALEVENTTYPE == 'meeting') ? " is one meeting." : " is one event.";
 			} else { 
-				responsetext += " are " + aEventTimes.length.toString();
+				responsetext += " are " + eventarray.length.toString();
 				responsetext += ( CALEVENTTYPE == 'meeting') ? " meetings. " : " events. ";
 			}
 			responsetext += eventresponse;
