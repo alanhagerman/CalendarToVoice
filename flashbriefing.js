@@ -84,7 +84,7 @@ function setupcalendar(whichcalendar) {
 			SKILLTITLE = 'Norfolk Virginia City Council Meetings';
 			TIMEZONELIT = 'America/New_York';
 			ICSURL = 'http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar';
-			INTRO = "City Council meetings for the City of Norfolk, Virginia. "
+			INTRO = "City Council meetings for the City of Norfolk Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
@@ -95,7 +95,7 @@ function setupcalendar(whichcalendar) {
 			SKILLTITLE = 'Virginia Beach Virginia Public Meetings';
 			TIMEZONELIT = 'America/New_York';
 			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
-			INTRO = "Public meetings for the City of Virginia Beach, Virginia. "
+			INTRO = "Public meetings for the City of Virginia Beach Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
@@ -105,7 +105,7 @@ function setupcalendar(whichcalendar) {
 			SKILLTITLE = 'Hampton Virginia Public Meetings';
 			TIMEZONELIT = 'America/New_York';
 			ICSURL = 'http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar';
-			INTRO = "Public meetings for the City of Hampton, Virginia. "
+			INTRO = "Public meetings for the City of Hampton Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
@@ -115,7 +115,17 @@ function setupcalendar(whichcalendar) {
 			SKILLTITLE = 'Newport News Virginia Public Meetings';
 			TIMEZONELIT = 'America/New_York';
 			ICSURL = 'http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar';
-			INTRO = "Public meetings for the City of Newport News, Virginia. "
+			INTRO = "Public meetings for the City of Newport News Virginia. "
+			WINDOWDAYS = 30;
+			CALTYPE = 'icalendar';
+			CALEVENTTYPE = 'meeting';
+			break;
+
+		case "cityofportsmouthvirginia":
+			SKILLTITLE = 'Portsmouth Virginia Public Meetings';
+			TIMEZONELIT = 'America/New_York';
+			ICSURL = 'http://www.portsmouthva.gov/common/modules/iCalendar/iCalendar.aspx?catID=14&feed=calendar';
+			INTRO = "Public meetings for the City of Portsmouth Virginia. "
 			WINDOWDAYS = 30;
 			CALTYPE = 'icalendar';
 			CALEVENTTYPE = 'meeting';
@@ -537,7 +547,8 @@ function process_events(eventarray) {
 				retmessage += ( oneevt.evtEnd == todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
 				retmessage += " is " + oneevt.summary + " ";
 			} else {
-				retmessage +=  ( cnt > 1 && cnt == eventarray.length ) ?	"Finally, " : "";
+				// if we only have a couple events, saying finally seems out of place so lets make sure we have 4
+				retmessage +=  ( cnt > 3 && cnt == eventarray.length ) ?	"Finally, " : "";
 				retmessage +=  ( lasteventStartdate == oneevt.eventStart.format('hh:mm A') ) ? "Also at " : "At ";
 
 				if (oneevt.eventStart.hour() == 0 && oneevt.eventStart.minute() == 0) {

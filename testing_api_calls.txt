@@ -1,0 +1,15 @@
+
+Testing API calls
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=startwheelhr
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofvirginiabeachvirginia
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofnewportnewsvirginia
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofhamptonvirginia
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofnorfolkvirginia
+
+https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofportsmouthvirginia
+
