@@ -12,8 +12,8 @@ import json
 import decimal
 
 rgn='us-east-1'
-tablename='voice_schedule'
-sourcefile='schedule_data.json'
+tablename='calendar2Voice_data'
+sourcefile='calendars_data.json'
 
 session = boto3.Session(profile_name="alexadevh3llc")
 dynamodb = session.resource('dynamodb', region_name=rgn)
@@ -23,13 +23,13 @@ try:
         TableName=tablename,
         KeySchema=[
             {
-                'AttributeName': 'dow',
+                'AttributeName': 'calendarname',
                 'KeyType': 'HASH'  #Partition key
             },
         ],
         AttributeDefinitions=[
             {
-                'AttributeName': 'dow',
+                'AttributeName': 'calendarname',
                 'AttributeType': 'S'
             },
         ],
@@ -45,16 +45,19 @@ except:
 table = dynamodb.Table(tablename)
 
 with open(sourcefile) as json_file:
-    textdows = json.load(json_file, parse_float = decimal.Decimal)
+    textcals = json.load(json_file, parse_float = decimal.Decimal)
 
-    for onedow in textdows:
-        if onedow['dow'] != "comment":
-            sched = json.dumps(onedow['schedule'])
-
+    for onecal in textcals:
+        if onecal['calendarname'] != "comment":
             table.put_item(
             Item={
-                'dow': onedow['dow'],
-                'localecode': onedow['localecode'],
-                'schedule': sched
+                'calendarname': onecal['calendarname'],
+                'SKILLTITLE': onecal['SKILLTITLE'],
+                'ICSURL': onecal['ICSURL'],
+                'INTRO': onecal['INTRO'],
+                'TIMEZONELIT': onecal['TIMEZONELIT'],
+                'WINDOWDAYS': onecal['WINDOWDAYS'],
+                'CALTYPE': onecal['CALTYPE'],
+                'CALEVENTTYPE': onecal['CALEVENTTYPE']
                 }
             )

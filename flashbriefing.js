@@ -17,6 +17,8 @@
 const ics2json = require('./icsToJson');
 const uuid = require('uuid');
 const rrule = require('rrule');
+const awsSDK = require('aws-sdk');
+const ddb = new awsSDK.DynamoDB.DocumentClient();
 
 // eslint-disable-next-line no-unused-vars
 const util = require('util');
@@ -53,6 +55,8 @@ var eventarray = [];
 // while looping through event snag the next day in future with events in case its needed
 var nextmeetingdate = {};
 
+const dbtable_resources = "calendar2Voice_data";
+
 /*
  * --------------------------------------------------------
  * function: setupcalendar
@@ -66,81 +70,45 @@ function setupcalendar(whichcalendar) {
 
 	console.log("Setting up calendar:" + whichcalendar) ;
 
-	switch (whichcalendar.toLowerCase() ) {
+	const dynamoParams = {
+		TableName : dbtable_resources,
+		Key: { "calendarname" : whichcalendar },
+	};
 
-		case "startwheelhr":
-			SKILLTITLE = 'StartWheel Hampton Roads';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'https://startwheel.org/events/?ical=1&tribe_display=month';
-			INTRO = "Business events in Hampton Roads ";
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'event';
-			break;
+	return new Promise((resolve,reject) => {
+		// console.log (dynamoParams);
+		ddb.get(dynamoParams, function(err, data) {
+			if (err) {
+				console.log("error",err);
+				reject(new Error('Error on get'));
+			} else {
+				try {
+					console.log("got record from db");
+					SKILLTITLE =  data.Item.SKILLTITLE;
+					TIMEZONELIT =  data.Item.TIMEZONELIT;
+					ICSURL =  data.Item.ICSURL;
+					INTRO =  data.Item.INTRO;
+					WINDOWDAYS =  data.Item.WINDOWDAYS;
+					CALTYPE =  data.Item.CALTYPE;
+					CALEVENTTYPE =  data.Item.CALEVENTTYPE;
 
-		// Norfolk doesn't have a single public events calendar.  their boards and commissions calendar appears empty
-		// so this is the best we can do for now
-		case "cityofnorfolkvirginia":
-			SKILLTITLE = 'Norfolk Virginia City Council Meetings';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar';
-			INTRO = "City Council meetings for the City of Norfolk Virginia. "
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'meeting';
-			break;
-			
-		case "cityofvirginiabeachvirginia":
-		case "cityofvb":
-			SKILLTITLE = 'Virginia Beach Virginia Public Meetings';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics';
-			INTRO = "Public meetings for the City of Virginia Beach Virginia. "
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'meeting';
-			break;
-
-		case "cityofhamptonvirginia":
-			SKILLTITLE = 'Hampton Virginia Public Meetings';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar';
-			INTRO = "Public meetings for the City of Hampton Virginia. "
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'meeting';
-			break;
-
-		case "cityofnewportnewsvirginia":
-			SKILLTITLE = 'Newport News Virginia Public Meetings';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar';
-			INTRO = "Public meetings for the City of Newport News Virginia. "
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'meeting';
-			break;
-
-		case "cityofportsmouthvirginia":
-			SKILLTITLE = 'Portsmouth Virginia Public Meetings';
-			TIMEZONELIT = 'America/New_York';
-			ICSURL = 'http://www.portsmouthva.gov/common/modules/iCalendar/iCalendar.aspx?catID=14&feed=calendar';
-			INTRO = "Public meetings for the City of Portsmouth Virginia. "
-			WINDOWDAYS = 30;
-			CALTYPE = 'icalendar';
-			CALEVENTTYPE = 'meeting';
-			break;
-
-	}
-	
-	if ( ICSURL.length > 0 ) {
-		moment.tz.setDefault(TIMEZONELIT);
-		todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
-		todayDate.startOf('day');
-		return true;
-	} else {
-		return false;
-	}
+					if ( ICSURL.length > 0 ) {
+						moment.tz.setDefault(TIMEZONELIT);
+						todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
+						todayDate.startOf('day');
+						resolve(true);
+					} else {
+						console.log("error on icsurl length",err);
+						reject(new Error('Error on icsul length'));
+					}
+				}
+				catch(e) {
+					console.log("error catch",e);
+					reject(new Error(e));
+				}
+			}
+		});
+	});
 
 }
 
@@ -364,7 +332,6 @@ function fmt_icalendar(calobj, evtjson) {
 	
 	// console.log("returning object");
 	console.log(util.inspect(retobj, {showHidden: false, depth: null}));
-
 	return retobj;
 
 }
@@ -444,16 +411,24 @@ function createReturn(stscode,responsetext) {
 	
 	const jsonDate = todayDate.toJSON();
 
-	const response = {
-		statusCode: 200,
-		body: JSON.stringify({
-			uid: uuid.v4(),
-			updateDate: jsonDate,
-			titleText: SKILLTITLE,
-			mainText: responsetext
-		})
-	};
+	let response = "";
 
+	try {
+		response = {
+			statusCode: stscode,
+			body: JSON.stringify({
+				uid: uuid.v4(),
+				updateDate: jsonDate,
+				titleText: SKILLTITLE,
+				mainText: responsetext
+			})
+		};
+	}
+	catch (e) {
+		console.log("Error createing response return!",e);
+	}
+
+	// console.log(util.inspect(response, {showHidden: false, depth: null}));
 	return response;
 }
 
@@ -655,45 +630,50 @@ exports.calendar2voice = function(event, context, callback) {
 
 	responseJSON = createReturn(200,'The requested calendar is not available');
 
-	if ( ! setupcalendar(SELECTEDCALENDAR.toLowerCase() ) ) {
-		// eslint-disable-next-line callback-return
+	setupcalendar(SELECTEDCALENDAR.toLowerCase() ).then( (res) =>  {
+
+		if ( res) {
+			// get the ICS via a promise so that we do not process without one
+			getICS(ICSURL).then( (caldata)  =>  {
+
+				try {
+					const jdata = ics2json.icsToJson(caldata);
+					eventarray = select_todays_events(jdata);
+					eventresponse = process_events(eventarray);
+				}
+				catch (e) {
+					console.log("error converting data");
+					eventresponse = "";
+				}
+			
+				responsetext = INTRO + "For today, " + todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
+
+				if ( eventresponse == "" ) {
+					// no meetings fine the next day of meetings after today
+					responsetext += " are no ";
+					responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
+					responsetext +=  ". The next day with ";
+					responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
+					responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
+				} else {
+					if ( eventarray.length == 1) {
+						responsetext += ( CALEVENTTYPE == 'meeting') ? " is one meeting." : " is one event.";
+					} else { 
+						responsetext += " are " + eventarray.length.toString();
+						responsetext += ( CALEVENTTYPE == 'meeting') ? " meetings. " : " events. ";
+					}
+					responsetext += eventresponse;
+				}
+				responseJSON = createReturn(200,responsetext);
+				return callback(null, responseJSON);
+			});   
+		} 
+		//console.log("returning good:" + responseJSON);
+		//callback(null, responseJSON);
+	})
+	.catch( (err)  => {
+		console.log("catch error on looking up calendar", err);
 		callback(null, responseJSON);
-		return;
-	}
+	});
 
-	// get the ICS via a promise so that we do not process without one
-	getICS(ICSURL).then( (caldata)  =>  {
-
-		try {
-			const jdata = ics2json.icsToJson(caldata);
-			eventarray = select_todays_events(jdata);
-			eventresponse = process_events(eventarray);
-		}
-		catch (e) {
-			eventresponse = "";
-		}
-	
-		responsetext = INTRO + "For today, " + todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
-
-		if ( eventresponse == "" ) {
-			// no meetings fine the next day of meetings after today
-			responsetext += " are no ";
-			responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
-			responsetext +=  ". The next day with ";
-			responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
-			responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
-		} else {
-			if ( eventarray.length == 1) {
-				responsetext += ( CALEVENTTYPE == 'meeting') ? " is one meeting." : " is one event.";
-			} else { 
-				responsetext += " are " + eventarray.length.toString();
-				responsetext += ( CALEVENTTYPE == 'meeting') ? " meetings. " : " events. ";
-			}
-			responsetext += eventresponse;
-		}
-
-		responseJSON = createReturn(200,responsetext);
-
-		callback(null, responseJSON);
-	});   
 };

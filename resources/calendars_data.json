@@ -1,13 +1,13 @@
 [
     {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
+        "calendarname":"startwheelhr",
+        "SKILLTITLE":"StartWheel Hampton Roads",
+        "ICSURL":"https://startwheel.org/events/?ical=1&tribe_display=month",
+        "INTRO":"Business events in Hampton Roads ",
         "TIMEZONELIT":"America/New_York",
         "WINDOWDAYS":30,
         "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
+        "CALEVENTTYPE":"event"
     },
     {
         "calendarname":"cityofportsmouthvirginia",
@@ -20,105 +20,43 @@
         "CALEVENTTYPE":"meeting"
     },
     {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
+        "calendarname":"cityofnorfolkvirginia",
+        "SKILLTITLE":"Norfolk Virginia City Council Meetings",
+        "ICSURL":"http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar",
+        "INTRO":"City Council meetings for the City of Norfolk Virginia. ",
         "TIMEZONELIT":"America/New_York",
         "WINDOWDAYS":30,
         "CALTYPE":"icalendar",
         "CALEVENTTYPE":"meeting"
     },
     {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
+        "calendarname":"cityofvirginiabeachvirginia",
+        "SKILLTITLE":"Virginia Beach Virginia Public Meetings",
+        "ICSURL":"https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics",
+        "INTRO":"Public meetings for the City of Virginia Beach Virginia. ",
         "TIMEZONELIT":"America/New_York",
         "WINDOWDAYS":30,
         "CALTYPE":"icalendar",
         "CALEVENTTYPE":"meeting"
     },
     {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
+        "calendarname":"cityofhamptonvirginia",
+        "SKILLTITLE":"Hampton Virginia Public Meetings",
+        "ICSURL":"http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar",
+        "INTRO":"Public meetings for the City of Hampton Virginia. ",
         "TIMEZONELIT":"America/New_York",
         "WINDOWDAYS":30,
         "CALTYPE":"icalendar",
         "CALEVENTTYPE":"meeting"
     },
     {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
+        "calendarname":"cityofnewportnewsvirginia",
+        "SKILLTITLE" : "Newport News Virginia Public Meetings",
+        "ICSURL":"http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar",
+        "INTRO":"Public meetings for the City of Newport News Virginia. ",
         "TIMEZONELIT":"America/New_York",
         "WINDOWDAYS":30,
         "CALTYPE":"icalendar",
         "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"",
-        "SKILLTITLE":"",
-        "ICSURL":"",
-        "INTRO":"",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-
-
+    }
 ]
