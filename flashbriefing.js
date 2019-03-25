@@ -255,7 +255,7 @@ function fmt_icalendar(calobj, evtjson) {
 	}
 
 	if ( evtjson.startDate && ( moment(evtjson.startDate,'YYYYMMDDTHHmmss').isValid() || moment(evtjson.startDate,'YYYYMMDD').isValid() ) ) {
-		evtStart = moment.tz(evtjson.startDate,'YYYYMMDDTHHmmss',TIMEZONELIT);
+		evtStart = moment.tz(evtjson.startDate,TIMEZONELIT);
 		
 	} else {
 		console.log("Invalid start date");
@@ -265,7 +265,7 @@ function fmt_icalendar(calobj, evtjson) {
 	try {
 
 		if ( evtjson.endDate && moment(evtjson.endDate,'YYYYMMDDTHHmmss').isValid() ) {
-			evtEnd =  moment.tz(evtjson.endDate,'YYYYMMDDTHHmmss',TIMEZONELIT);
+			evtEnd =  moment.tz(evtjson.endDate,TIMEZONELIT);
 		} else {
 			// no enddate.  
 			evtEnd = evtStart.clone();
@@ -281,8 +281,15 @@ function fmt_icalendar(calobj, evtjson) {
 		// calculate the length
 		evtLength = evtEnd.diff(evtStart,'minutes');
 
+		// need to clean the summary to keep alexa speaking ok.  for some special characters we replace
+		// with the english word. whats left should just be letters, digts, comma, colon, semi-colon, space, quote since flash briefings
+		// have to be plain text.
+		let cleanSummary = evtjson.summary.replace("&"," and ");
+		cleanSummary = cleanSummary.replace(/\//gu,' and ');
+		cleanSummary = cleanSummary.replace(/([^A-Za-z0-9,'.:;$% ]+)/giu, '');
+
 		// usedate = evtjson.startDate;
-		console.log("createevent start:" + evtStart.format() + ",  end:" + evtEnd.format() + ", summary=" + evtjson.summary);
+		console.log("createevent start:" + evtStart.format() + ",  end:" + evtEnd.format() + ", summary=" + cleanSummary);
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: possible bug, can we have a recurring rule on a multi-day event that results in a new event that spans today
@@ -307,11 +314,12 @@ function fmt_icalendar(calobj, evtjson) {
 		}
 
 		let uidtouse = uuid.v4();
-		let sortkey = momentNextStartDate.format('HH:mm') + ":" + evtjson.summary + ":" + uidtouse;
+		//let sortkey = momentNextStartDate.format('HH:mm') + ":" + cleanSummary + ":" + uidtouse;
+		let sortkey = evtStart.format('HH:mm') + ":" + cleanSummary + ":" + uidtouse;
 
 		// set the object
 		try {
-			retobj.summary = evtjson.summary;
+			retobj.summary = cleanSummary;
 			retobj.qualifier = evtQualifier;
 			retobj.isvalid = true;
 			retobj.uid = uidtouse;
