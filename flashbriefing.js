@@ -55,7 +55,9 @@ var eventarray = [];
 // while looping through event snag the next day in future with events in case its needed
 var nextmeetingdate = {};
 
-const dbtable_resources = "calendar2Voice_data";
+// 
+const dbtable_resources = "calendartovoice_calendars";
+const dbtable_userid = "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f";
 
 /*
  * --------------------------------------------------------
@@ -72,7 +74,10 @@ function setupcalendar(whichcalendar) {
 
 	const dynamoParams = {
 		TableName : dbtable_resources,
-		Key: { "calendarname" : whichcalendar },
+		Key: {
+			userId: dbtable_userid,
+			calendarName: whichcalendar
+		}
 	};
 
 	return new Promise((resolve,reject) => {
@@ -84,13 +89,13 @@ function setupcalendar(whichcalendar) {
 			} else {
 				try {
 					console.log("got record from db");
-					SKILLTITLE =  data.Item.SKILLTITLE;
-					TIMEZONELIT =  data.Item.TIMEZONELIT;
-					ICSURL =  data.Item.ICSURL;
-					INTRO =  data.Item.INTRO;
-					WINDOWDAYS =  data.Item.WINDOWDAYS;
-					CALTYPE =  data.Item.CALTYPE;
-					CALEVENTTYPE =  data.Item.CALEVENTTYPE;
+					SKILLTITLE =  data.Item.skillTitle;
+					TIMEZONELIT =  data.Item.inTimezone;
+					ICSURL =  data.Item.ICSUrl;
+					INTRO =  data.Item.introText;
+					WINDOWDAYS =  data.Item.windowDays;
+					CALTYPE =  data.Item.calendarType;
+					CALEVENTTYPE =  data.Item.calendarEventType;
 
 					if ( ICSURL.length > 0 ) {
 						moment.tz.setDefault(TIMEZONELIT);
@@ -672,11 +677,12 @@ exports.calendar2voice = function(event, context, callback) {
 					}
 					responsetext += eventresponse;
 				}
-				responseJSON = createReturn(200,responsetext);
+				responseJSON = createReturn(200,responsetext); 
+				console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
 				return callback(null, responseJSON);
 			});   
 		} 
-		//console.log("returning good:" + responseJSON);
+		console.log("not error but and end of res:" + responseJSON);
 		//callback(null, responseJSON);
 	})
 	.catch( (err)  => {
