@@ -562,13 +562,13 @@ function process_events(eventarray) {
 			console.log(util.inspect(oneevt, {showHidden: false, depth: null}));
 
 			if ( oneevt.qualifier == EVENTSPANSTODAY ) {
-				retmessage += "All day ";
+				retmessage += ". All day ";
 				retmessage += ( oneevt.evtEnd == todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
 				retmessage += " is " + oneevt.summary + " ";
 			} else {
 				// if we only have a couple events, saying finally seems out of place so lets make sure we have 4
-				retmessage +=  ( cnt > 3 && cnt == eventarray.length ) ?	"Finally, " : "";
-				retmessage +=  ( lasteventStartdate == oneevt.eventStart.format('hh:mm A') ) ? "Also at " : "At ";
+				retmessage +=  ( cnt > 3 && cnt == eventarray.length ) ?	". Finally, " : "";
+				retmessage +=  ( lasteventStartdate == oneevt.eventStart.format('hh:mm A') ) ? ". Also at " : ". At ";
 
 				if (oneevt.eventStart.hour() == 0 && oneevt.eventStart.minute() == 0) {
 					retmessage += " midnight ";
