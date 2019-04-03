@@ -229,6 +229,36 @@ function returnNextEventDateFromRule(usedate,evtjson) {
 
 /*
  * --------------------------------------------------------
+ * function: cleanbasedoncalendar
+ * Some calendars such as Startwheels may include words that begin
+ * wtih digits 
+ * --------------------------------------------------------
+ */
+function cleanbasedoncalendar(summary) {
+
+	var retSummary = summary;
+
+	let pat757 = /([0-9]{3})( |-|\.)*([a-zA-Z])/ug;
+
+	switch (SELECTEDCALENDAR.toLowerCase() ) {
+		case "startwheelhr":
+
+			// in startwheel, we have a number of 757Angels and 757this or 757that
+			// for these we want it talked out not treated as sevenhundredfiftyseven
+			if ( summary.match(pat757) ) {
+				retSummary = summary.replace(/757/gu,' seven five seven ');
+			}
+			break;
+
+		default:
+			retSummary = summary
+	}
+
+	return retSummary;
+}
+
+/*
+ * --------------------------------------------------------
  * function: fmt_icalendar
  * purpose: update a standard event object from icalendar json
  * 
@@ -291,6 +321,7 @@ function fmt_icalendar(calobj, evtjson) {
 		// have to be plain text.
 		let cleanSummary = evtjson.summary.replace("&"," and ");
 		cleanSummary = cleanSummary.replace(/\//gu,' and ');
+		cleanSummary = cleanbasedoncalendar(cleanSummary);
 		cleanSummary = cleanSummary.replace(/([^A-Za-z0-9,'.:;$% ]+)/giu, '');
 
 		// usedate = evtjson.startDate;
@@ -579,7 +610,6 @@ function init(event) {
 	responseJSON = "";
 	nextmeetingdate = {};
 	invokedDate = "";
-	SELECTEDCALENDAR = "";
 	SELECTEDCALENDAR = "";
 	SKILLTITLE = "";
 	TIMEZONELIT = 'America/New_York';

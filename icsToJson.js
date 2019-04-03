@@ -35,7 +35,7 @@ function icsToJson (icsData )
   let isAlarm = false;
   for (let i = 0, iLen = lines.length; i < iLen; ++i) {
     const line = lines[i];
-    const lineData = line.split(":");
+    const lineData = line.split(":");  // if summary,may have : inside the summary text!
 
     let key = lineData[0];
     const value = lineData[1];
