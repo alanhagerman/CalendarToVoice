@@ -1,62 +1,86 @@
 [
     {
-        "calendarname":"startwheelhr",
-        "SKILLTITLE":"StartWheel Hampton Roads",
-        "ICSURL":"https://startwheel.org/events/?ical=1&tribe_display=month",
-        "INTRO":"Business events in Hampton Roads ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"event"
-    },
-    {
-        "calendarname":"cityofportsmouthvirginia",
-        "SKILLTITLE":"Portsmouth Virginia Public Meetings",
-        "ICSURL":"http://www.portsmouthva.gov/common/modules/iCalendar/iCalendar.aspx?catID=14&feed=calendar",
-        "INTRO":"Public meetings for the City of Portsmouth Virginia. ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"cityofnorfolkvirginia",
-        "SKILLTITLE":"Norfolk Virginia City Council Meetings",
-        "ICSURL":"http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar",
-        "INTRO":"City Council meetings for the City of Norfolk Virginia. ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"cityofvirginiabeachvirginia",
-        "SKILLTITLE":"Virginia Beach Virginia Public Meetings",
-        "ICSURL":"https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics",
-        "INTRO":"Public meetings for the City of Virginia Beach Virginia. ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"cityofhamptonvirginia",
-        "SKILLTITLE":"Hampton Virginia Public Meetings",
-        "ICSURL":"http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar",
-        "INTRO":"Public meetings for the City of Hampton Virginia. ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    },
-    {
-        "calendarname":"cityofnewportnewsvirginia",
-        "SKILLTITLE" : "Newport News Virginia Public Meetings",
-        "ICSURL":"http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar",
-        "INTRO":"Public meetings for the City of Newport News Virginia. ",
-        "TIMEZONELIT":"America/New_York",
-        "WINDOWDAYS":30,
-        "CALTYPE":"icalendar",
-        "CALEVENTTYPE":"meeting"
-    }
+        "calendarEventType": "meeting",
+        "calendarName": "cityofhamptonvirginia",
+        "calendarType": "icalendar",
+        "createdAt": 1553375843876,
+        "ICSUrl": "http://hampton.gov/common/modules/iCalendar/iCalendar.aspx?catID=86&feed=calendar",
+        "inTimezone": "America/New_York",
+        "introText": "Public meetings    ",
+        "skillTitle": "Hampton Virginia Public Meetings",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "meeting",
+        "calendarName": "cityofnewportnewsvirginia",
+        "calendarType": "icalendar",
+        "createdAt": 1553376631744,
+        "ICSUrl": "http://www.nnva.gov/common/modules/iCalendar/iCalendar.aspx?catID=34&feed=calendar",
+        "inTimezone": "America/New_York",
+        "introText": "Public meetings  ",
+        "skillTitle": "Newport News Virginia Public Meetings",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "meeting",
+        "calendarName": "cityofnorfolkvirginia",
+        "calendarType": "icalendar",
+        "createdAt": 1553376664680,
+        "ICSUrl": "http://www.norfolk.gov/common/modules/iCalendar/iCalendar.aspx?catID=73&feed=calendar",
+        "inTimezone": "America/New_York",
+        "introText": "City Council meetings  ",
+        "skillTitle": "Norfolk Virginia City Council Meetings",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "meeting",
+        "calendarName": "cityofportsmouthvirginia",
+        "calendarType": "icalendar",
+        "createdAt": 1553376774276,
+        "ICSUrl": "http://www.portsmouthva.gov/common/modules/iCalendar/iCalendar.aspx?catID=14&feed=calendar",
+        "inTimezone": "America/New_York",
+        "introText": "Public meetings ",
+        "skillTitle": "Portsmouth Virginia Public Meetings",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "meeting",
+        "calendarName": "cityofvirginiabeachvirginia",
+        "calendarType": "icalendar",
+        "createdAt": 1553376792907,
+        "ICSUrl": "https://calendar.google.com/calendar/ical/codeforamerica.org_25s5sf8i4kkgdd3u7m6bnmsli0%40group.calendar.google.com/public/basic.ics",
+        "inTimezone": "America/New_York",
+        "introText": "Public meetings ",
+        "skillTitle": "Virginia Beach Virginia Public Meetings",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "event",
+        "calendarName": "hamptonroadsplanningdistrictcommission",
+        "calendarType": "icalendar",
+        "createdAt": 1555263380290,
+        "ICSUrl": "http://www.hrpdcva.gov/events/index/export/type/save",
+        "inTimezone": "America/New_York",
+        "introText": "Here are the Hampton Roads Planning District Commission events",
+        "skillTitle": "Hampton Roads Planning District Commission Events",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      },
+      {
+        "calendarEventType": "event",
+        "calendarName": "startwheelhr",
+        "calendarType": "icalendar",
+        "createdAt": 1553376871376,
+        "ICSUrl": "https://startwheel.org/events/?ical=1&tribe_display=month",
+        "inTimezone": "America/New_York",
+        "introText": "Business events in Hampton Roads ",
+        "skillTitle": "StartWheel Hampton Roads",
+        "userId": "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f",
+        "windowDays": 30
+      }
 ]
