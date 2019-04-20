@@ -106,4 +106,6 @@ const icsToJson = icsData => {
   return array;
 };
 
-export default icsToJson;
+module.exports = { 
+  icsToJson
+}

@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 /*
  * --------------------------------------------------------
@@ -13,7 +13,9 @@
  * --------------------------------------------------------
  */
 
+// const ics2json = require('./icsToJson').default;
 const ics2json = require('./icsToJson');
+
 const uuid = require('uuid');
 const cfg = require('config');
 const Calendar = require('containers/calendar');
