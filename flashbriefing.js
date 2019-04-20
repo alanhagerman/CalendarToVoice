@@ -16,9 +16,10 @@
 
 const ics2json = require('./icsToJson');
 const uuid = require('uuid');
-const rrule = require('rrule');
-const awsSDK = require('aws-sdk');
-const ddb = new awsSDK.DynamoDB.DocumentClient();
+const cfg = require('config');
+
+const Calendar = require('containers/calendar');
+const Event = require('containers/event');
 
 // eslint-disable-next-line no-unused-vars
 const util = require('util');
@@ -28,24 +29,6 @@ const util = require('util');
 const { DateTime } = require("luxon");
 var moment = require('moment-timezone');
 
-// these are potentially passed a invocation variables
-// defaults
-var SELECTEDCALENDAR = "";
-var SKILLTITLE = "";
-var TIMEZONELIT = 'America/New_York';
-var ICSURL = "";
-var INTRO = "";
-var WINDOWDAYS = 30;
-var CALTYPE = 'icalendar';
-var CALEVENTTYPE = 'event';  // used to tailor response phrasing.  event or meeting
-
-var invokedDate = "";
-var todayDate = "";
-var endWindowDate = ""
-
-// calendar types we support
-const CALTYPEICAL = 'icalendar';
-
 // text we build up of each event to later return to Alexa
 var responsetext = "";
 var eventresponse = "";
@@ -54,366 +37,6 @@ var eventarray = [];
 
 // while looping through event snag the next day in future with events in case its needed
 var nextmeetingdate = {};
-
-// 
-const dbtable_resources = "calendartovoice_calendars";
-const dbtable_userid = "us-east-1:22affc41-8329-4fef-82fc-f6325c82ee6f";
-
-/*
- * --------------------------------------------------------
- * function: setupcalendar
- * purpose: at the moment we specifically add calenders so we can
- * verify they work and for convenience.  There's nothing stopping
- * these from coming the invocation other than probably not good for
- * security.
- * --------------------------------------------------------
- */
-function setupcalendar(whichcalendar) {
-
-	console.log("Setting up calendar:" + whichcalendar) ;
-
-	const dynamoParams = {
-		TableName : dbtable_resources,
-		Key: {
-			userId: dbtable_userid,
-			calendarName: whichcalendar
-		}
-	};
-
-	return new Promise((resolve,reject) => {
-		// console.log (dynamoParams);
-		ddb.get(dynamoParams, function(err, data) {
-			if (err) {
-				console.log("error",err);
-				reject(new Error('Error on get'));
-			} else {
-				try {
-					console.log("got record from db");
-					SKILLTITLE =  data.Item.skillTitle;
-					TIMEZONELIT =  data.Item.inTimezone;
-					ICSURL =  data.Item.ICSUrl;
-					INTRO =  data.Item.introText;
-					WINDOWDAYS =  data.Item.windowDays;
-					CALTYPE =  data.Item.calendarType;
-					CALEVENTTYPE =  data.Item.calendarEventType;
-
-					if ( ICSURL.length > 0 ) {
-						moment.tz.setDefault(TIMEZONELIT);
-						todayDate = ( invokedDate > '') ? moment.tz(invokedDate,TIMEZONELIT) : moment.tz(TIMEZONELIT);
-						todayDate.startOf('day');
-						resolve(true);
-					} else {
-						console.log("error on icsurl length",err);
-						reject(new Error('Error on icsul length'));
-					}
-				}
-				catch(e) {
-					console.log("error catch",e);
-					reject(new Error(e));
-				}
-			}
-		});
-	});
-
-}
-
-/*
- * --------------------------------------------------------
- * function: eventTimeQualifier
- * purpose: if start date is today OR if start date < today but end date is today or later
- * --------------------------------------------------------
- */
-
-const EVENTISPAST = 1
-const EVENTISFUTURE = 2
-const EVENTSTARTSTODAY = 3
-const EVENTENDSTODAY = 4
-const EVENTSPANSTODAY = 5
-
-function eventTimeQualifier(startmomentobj,endmomentobj) {
-
-	var endDiffinDays, startDiffinDays;
-
-	var startNoTime = startmomentobj.clone();
-	var endNoTime = endmomentobj.clone();
-
-	try {
-		// no time  is considered for this
-		startNoTime.startOf('day');
-		startDiffinDays = startNoTime.diff(todayDate,'days');
-
-		endNoTime.startOf('day');
-		endDiffinDays = endNoTime.diff(todayDate,'days');
-	}
-	// eslint-disable-next-line no-catch-shadow
-	catch (e) {
-		startDiffinDays = -1;
-		endDiffinDays = -1;
-		console.log("Diff error:", e);
-	}
-	// console.log("Diff in days is:" + startDiffinDays  + " and end:" + endDiffinDays + " with today:" + todayDate.format());
-
-	if ( startDiffinDays > 0 ) {
-		return EVENTISFUTURE;
-	} else if ( startDiffinDays < 0 && endDiffinDays < 0 ) {
-		return EVENTISPAST;
-	} else if ( startDiffinDays == 0 ) {
-		if ( startmomentobj.hour() == 0 && startmomentobj.minute() < 5 && 
-			(  (endmomentobj.hour() == 23 && endmomentobj.minute() > 54 ) || endDiffinDays > 0 ) ) {
-			return EVENTSPANSTODAY;
-		} else {
-			return EVENTSTARTSTODAY;  // all same day events that start today actually
-		}
-	} else if ( startDiffinDays < 0 &&  endDiffinDays == 0  ) {
-		return EVENTENDSTODAY;
-	} else if ( startDiffinDays < 0 &&  endDiffinDays > 0 ) {
-		return EVENTSPANSTODAY;
-	}
-
-	// have no clue
-	return 0;
-}
-
-/*
- * --------------------------------------------------------
- * function: returnNextEventDateFromRule
- * purpose: return the calculated eventStartdate - either the
- *    date from the ical event or one based on the icaleventStartdate
- *    and the rule
- * --------------------------------------------------------
- */
-function returnNextEventDateFromRule(usedate,evtjson) {
-
-	var eRule = {};
-	var retDate = usedate;
-	var ltime = {};
-
-	if (evtjson.rrule) {
-
-		// var userule = "DTSTART:" + usedate + "\ntzid:" + TIMEZONELIT + "\nRRULE:" + evtjson.rrule;
-		var userule = "DTSTART;TZID=" + TIMEZONELIT + ":" + usedate + "\nRRULE:" + evtjson.rrule;
-		// console.log("Event Rule being processed:" + userule);
-
-		try {
-			eRule = rrule.rrulestr(userule);
-			let aeventStartdates = eRule.between(todayDate.toDate(), endWindowDate.toDate());
-
-			// eRUle always returns UTC times so we need to maybe convert depending on the source
-
-			if ( aeventStartdates.length > 0 ) {
-				retDate = aeventStartdates[0].toString();
-
-				// if the original date ended in Z then its a UTC Date, otherwise its local
-				if ( ! usedate.endsWith('Z') ) {
-					// original time was NOT UTC, Need to convert to local time
-					ltime = moment.utc(retDate).tz(TIMEZONELIT);
-					retDate = ltime.format();
-				}
-
-			}
-		}
-		catch (e) {
-			console.log("error processing rule:", e);
-		}
-	} else {
-		// no rule, so use the date given. It's always local time even if it has a Z on the end
-		ltime = moment(usedate);
-		retDate = ltime.format();
-		// console.log("Converted usedate:" + usedate + " to moment:" + retDate + " without rule")
-	}
-
-	// console.log("Setting event date based on rule to:",retDate);
-	return retDate; 
-
-}
-
-/*
- * --------------------------------------------------------
- * function: cleanbasedoncalendar
- * Some calendars such as Startwheels may include words that begin
- * wtih digits 
- * --------------------------------------------------------
- */
-function cleanbasedoncalendar(summary) {
-
-	var retSummary = summary;
-
-	let pat757 = /([0-9]{3})( |-|\.)*([a-zA-Z])/ug;
-
-	switch (SELECTEDCALENDAR.toLowerCase() ) {
-		case "startwheelhr":
-
-			// in startwheel, we have a number of 757Angels and 757this or 757that
-			// for these we want it talked out not treated as sevenhundredfiftyseven
-			if ( summary.match(pat757) ) {
-				retSummary = summary.replace(/757/gu,' seven five seven ');
-			}
-			break;
-
-		default:
-			retSummary = summary
-	}
-
-	return retSummary;
-}
-
-/*
- * --------------------------------------------------------
- * function: fmt_icalendar
- * purpose: update a standard event object from icalendar json
- * 
- * NOTE: recuring events in iCalendars have a start date and a 
- * recurring RULE.  We need to apply the rule to the event and then
- * see if it occurs today or within the next 30 days.  The first 
- * occurence of the event within that window becomes the eventStartdate.
- * 
- *	we also need the DTEND to calculate the length of the event since it could
- * span hours or days.  DTEND is NOT required. The spec says if the DTSTART is a date only
- * the the default DTEND is 1 day later. if the DTSTART has a time component,  the DTEND 
- * default is the exact same time
- * 
- * if we have a single event (no RRULE) we have a dtstart and dtend easy peasy
- * if we have an RRULE, we need to get the next event date based on the rrule that is 
- * today or later and then we need to calculate the end date for that next event based
- * on the relationshp from the original start/end dates 
- * --------------------------------------------------------
- */
-function fmt_icalendar(calobj, evtjson) {
-	
-	var retobj = calobj;
-	var evtEnd, evtLength, evtQualifier, evtStart, lrule, momentNextEndDate, momentNextStartDate, nexteventStartdate;
-
-	// need the evtjosn AND we need a summmary which describes the event otherwise skip it
-	if ( !evtjson || !evtjson.summary) {
-		console.log("Invalid event to format)");
-		return retobj; 
-	}
-
-	if ( evtjson.startDate && ( moment(evtjson.startDate,'YYYYMMDDTHHmmss').isValid() || moment(evtjson.startDate,'YYYYMMDD').isValid() ) ) {
-		evtStart = moment.tz(evtjson.startDate,TIMEZONELIT);
-		
-	} else {
-		console.log("Invalid start date");
-		return retobj; 
-	}
-
-	try {
-
-		if ( evtjson.endDate && moment(evtjson.endDate,'YYYYMMDDTHHmmss').isValid() ) {
-			evtEnd =  moment.tz(evtjson.endDate,TIMEZONELIT);
-		} else {
-			// no enddate.  
-			evtEnd = evtStart.clone();
-			// eslint-disable-next-line no-warning-comments
-			// TODO: if we have a duration, calculate it
-
-			// otherwise Spec says if startdate is dateonly duration is 1 day otherwise 0 days
-			if ( ! moment(evtjson.startDate,'YYYYMMDDTHHmmss').isValid() ) {
-				evtEnd.add(1,'day');
-			}
-		}
-
-		// calculate the length
-		evtLength = evtEnd.diff(evtStart,'minutes');
-
-		// need to clean the summary to keep alexa speaking ok.  for some special characters we replace
-		// with the english word. whats left should just be letters, digts, comma, colon, semi-colon, space, quote since flash briefings
-		// have to be plain text.
-		let cleanSummary = evtjson.summary.replace("&"," and ");
-		cleanSummary = cleanSummary.replace(/\//gu,' and ');
-		cleanSummary = cleanbasedoncalendar(cleanSummary);
-		cleanSummary = cleanSummary.replace(/([^A-Za-z0-9,'.:;$% ]+)/giu, '');
-
-		// usedate = evtjson.startDate;
-		console.log("createevent start:" + evtStart.format() + ",  end:" + evtEnd.format() + ", summary=" + cleanSummary);
-
-		// eslint-disable-next-line no-warning-comments
-		// TODO: possible bug, can we have a recurring rule on a multi-day event that results in a new event that spans today
-		// at the moment we filter to today or later on the rule generated dates so we might miss it
-		if ( evtjson.rrule ) {
-			nexteventStartdate = returnNextEventDateFromRule(evtjson.startDate,evtjson);
-			lrule = evtjson.rrule;
-			momentNextStartDate =  moment.tz(nexteventStartdate,'YYYY-MM-DDTHHmmss',TIMEZONELIT);
-			momentNextEndDate =  momentNextStartDate.add(evtLength,'minutes');
-			evtQualifier = eventTimeQualifier(momentNextStartDate,momentNextEndDate);
-		} else {
-			// no recurring rule so check to see if it spans today
-			evtQualifier = eventTimeQualifier(evtStart,evtEnd);
-			lrule = "";
-			if ( evtQualifier == EVENTSTARTSTODAY || evtQualifier == EVENTISPAST || evtQualifier == EVENTISFUTURE ) {
-				momentNextStartDate = evtStart.clone();
-			} else {
-				// must span or end today so it started at midnight
-				momentNextStartDate = todayDate; 
-			}
-			momentNextEndDate = evtEnd;
-		}
-
-		let uidtouse = uuid.v4();
-		//let sortkey = momentNextStartDate.format('HH:mm') + ":" + cleanSummary + ":" + uidtouse;
-		let sortkey = evtStart.format('HH:mm') + ":" + cleanSummary + ":" + uidtouse;
-
-		// set the object
-		try {
-			retobj.summary = cleanSummary;
-			retobj.qualifier = evtQualifier;
-			retobj.isvalid = true;
-			retobj.uid = uidtouse;
-			retobj.rrule = lrule;
-			retobj.eventStart = evtStart;
-			retobj.eventEnd = evtEnd;
-			retobj.nextStart = momentNextStartDate;
-			retobj.nextEnd = momentNextEndDate;
-			retobj.sortkey = sortkey;
-		}
-		catch (e) {
-			console.log("Error setting object:",e)
-		}
-	}
-	catch(e) {
-		console.log("error in object creation:",e);
-	}
-	
-	// console.log("returning object");
-	console.log(util.inspect(retobj, {showHidden: false, depth: null}));
-	return retobj;
-
-}
-
-
-/*
- * --------------------------------------------------------
- * function: createeventobj
- * purpose: process the eventjson based on the format and return
- * a standardized event obj.  This lets us handle not only icalendar
- * but also other event formats in the future
- * --------------------------------------------------------
- */
-function createeventobj(evtformat, evtjson) {
-
-	// our standard event object returned
-	var retobj = {
-		summary:"",
-		qualifier:0,
-		isvalid:false,
-		uid:"",
-		rrule:"",
-		eventStart:"",
-		eventEnd:"",
-		nextStart:"",
-		nextEnd:"",
-		sortkey:"",
-		}
-
-	switch (evtformat) {
-
-		case CALTYPEICAL:
-			return fmt_icalendar(retobj, evtjson);
-	}
-
-	// return the empty object
-	return retobj;
-}
 
 /*
  * --------------------------------------------------------
@@ -451,9 +74,9 @@ function getICS(fromurl) {
  * purpose: creates standard JSON return
  * --------------------------------------------------------
  */
-function createReturn(stscode,responsetext) {
+function createReturn(stscode,responsetext, calobj) {
 	
-	const jsonDate = todayDate.toJSON();
+	const jsonDate = calobj.todayDate.toJSON();
 
 	let response = "";
 
@@ -463,7 +86,7 @@ function createReturn(stscode,responsetext) {
 			body: JSON.stringify({
 				uid: uuid.v4(),
 				updateDate: jsonDate,
-				titleText: SKILLTITLE,
+				titleText: calobj.skilltitle,
 				mainText: responsetext
 			})
 		};
@@ -479,10 +102,10 @@ function createReturn(stscode,responsetext) {
 /*
  * --------------------------------------------------------
  * function: select_todays_events
- * purpose: select onlyt standard event objects for today
+ * purpose: select only standard event objects for today
  * --------------------------------------------------------
  */
-function select_todays_events(jdata) {
+function select_todays_events(jdata, thiscal) {
 
 	let arTodaysEvents = [];
 	let stdevent = {};
@@ -495,20 +118,21 @@ function select_todays_events(jdata) {
 			if ( oneevent && oneevent.startDate && oneevent.summary ) {
 				
 				// create our standard event 
-				stdevent = createeventobj(CALTYPE,oneevent); 
+				stdevent = new Event()
+				stdevent.load(thiscal,oneevent);		
 
 				if ( stdevent.isvalid) {
 					console.log("valid event. nextStart date:" + stdevent.nextStart.format() + " for qualifier:" + stdevent.qualifier );
 
 					// if its for today, save it so we can sort it
-					if ( stdevent.qualifier ==  EVENTSTARTSTODAY  || stdevent.qualifier ==  EVENTENDSTODAY || stdevent.qualifier ==  EVENTSPANSTODAY ) {
+					if ( stdevent.qualifier ==  stdevent.EVENTSTARTSTODAY  || stdevent.qualifier ==  stdevent.EVENTENDSTODAY || stdevent.qualifier ==  stdevent.EVENTSPANSTODAY ) {
 						arTodaysEvents.push(stdevent);
 					} 
 
 					// wasnt a today event to be reported, is it a future date? If so is it closer than any other we've seen so far?
 					// nextmeetingdate is GLOBAL and was set based on the window we use for this calendar already
-					if (  stdevent.qualifier ==  EVENTISFUTURE ) {
-						let diffToday = nextmeetingdate.diff(todayDate,'days');
+					if (  stdevent.qualifier ==  stdevent.EVENTISFUTURE ) {
+						let diffToday = nextmeetingdate.diff(thiscal.todayDate,'days');
 						let diffevent = nextmeetingdate.diff(stdevent.nextStart,'days' );
 						if ( diffevent < diffToday && diffevent > 0 ) {
 							nextmeetingdate = stdevent.nextStart.clone();
@@ -537,10 +161,11 @@ function select_todays_events(jdata) {
  *
  * --------------------------------------------------------
  */
-function process_events(eventarray) {
+function process_events(eventarray, thiscal) {
 
 	let retmessage = "";
 
+	console.log("Processing events for today");
 	if ( eventarray.length > 0) {
 
 		// remember sort mutates the object
@@ -561,9 +186,9 @@ function process_events(eventarray) {
 
 			console.log(util.inspect(oneevt, {showHidden: false, depth: null}));
 
-			if ( oneevt.qualifier == EVENTSPANSTODAY ) {
+			if ( oneevt.qualifier == oneevt.EVENTSPANSTODAY ) {
 				retmessage += ". All day ";
-				retmessage += ( oneevt.evtEnd == todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
+				retmessage += ( oneevt.evtEnd == thiscal.todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
 				retmessage += " is " + oneevt.summary + " ";
 			} else {
 				// if we only have a couple events, saying finally seems out of place so lets make sure we have 4
@@ -578,11 +203,11 @@ function process_events(eventarray) {
 					retmessage += oneevt.eventStart.format('hh:mm A');
 				}
 			
-				retmessage +=  ( CALEVENTTYPE == 'meeting') ? ", the " + oneevt.summary + " meets. " : ", is " + oneevt.summary + ". ";
+				retmessage +=  ( thiscal.calendareventtype == 'meeting') ? ", the " + oneevt.summary + " meets. " : ", is " + oneevt.summary + ". ";
 
 			}
 			cnt += 1;
-			if ( oneevt.qualifier != EVENTSPANSTODAY ) {
+			if ( oneevt.qualifier != oneevt.EVENTSPANSTODAY ) {
 				lasteventStartdate = oneevt.eventStart.format('hh:mm A')
 			}
 		});
@@ -605,57 +230,59 @@ function init(event) {
 
 	const evtpointer = ( event && event.queryStringParameters ) ?  event.queryStringParameters : event;
 
+	var retcal = new Calendar();
+	console.log("past new cal new");
+
 	responsetext = "";
 	eventresponse = "";
 	responseJSON = "";
 	nextmeetingdate = {};
-	invokedDate = "";
-	SELECTEDCALENDAR = "";
-	SKILLTITLE = "";
-	TIMEZONELIT = 'America/New_York';
-	ICSURL = "";
-	INTRO = "";
-	WINDOWDAYS = 30;
-	CALTYPE = 'icalendar';
-	CALEVENTTYPE = 'event';
 
 	// for testing, see if we got a 'fordate off the API invocation
 	if ( evtpointer.fordate && evtpointer.fordate > '' && moment(evtpointer.fordate,'YYYY-MM-DD').isValid() ) {
-		
-		invokedDate = evtpointer.fordate;
-	
-		todayDate = moment.tz(evtpointer.fordate,TIMEZONELIT);
-		todayDate.startOf('day');
-		
-		endWindowDate = moment.tz(evtpointer.fordate,TIMEZONELIT);
-		endWindowDate.add(WINDOWDAYS,'days');
-		endWindowDate.startOf('day');
-
+		retcal.invokedDate = evtpointer.fordate;
+		retcal.todayDate = moment.tz(evtpointer.fordate,retcal.intimezone);
+		retcal.endWindowDate = moment.tz(evtpointer.fordate,retcal.intimezone);
+		retcal.endWindowDate.add(retcal.windowdays,'days');
 	} else {
 		// default to the actual today date
-		todayDate = moment.tz(TIMEZONELIT);
-		endWindowDate = todayDate.clone();
-		endWindowDate.add(WINDOWDAYS,'days');
+		retcal.todayDate = moment.tz(retcal.intimezone);
+		retcal.endWindowDate = retcal.todayDate.clone();
+		retcal.endWindowDate.add(retcal.windowdays,'days');
 	}
 
+	console.log(util.inspect(retcal, {showHidden: false, depth: null}));
+
 	// set to midnight for both
-	todayDate.startOf('day');
-	endWindowDate.startOf('day');
+	retcal.todayDate.startOf('day');
+	retcal.endWindowDate.startOf('day');
 
 	// grab the desired calendar off the api
 	if ( evtpointer.forcalendar  && evtpointer.forcalendar > '' ) {
-		SELECTEDCALENDAR = evtpointer.forcalendar;
+		console.log("setting selectedcalendar");
+		retcal.selectedcalendar = evtpointer.forcalendar.toLowerCase();
 	} 
 
-	if ( TIMEZONELIT.length > 0 ) {
-		moment.tz.setDefault(TIMEZONELIT);
-	}
+	//if ( retcal.intimezone.length > 0 ) {
+	//	moment.tz.setDefault(retcal.intimezone);
+	//}
 
 	// default it for the loop
-	nextmeetingdate = endWindowDate;
+	nextmeetingdate = retcal.endWindowDate;
 
-	console.log("INIT todayDate:" + todayDate.format() + " , endWindowDate:" + endWindowDate.format() + ", timezone:" + TIMEZONELIT + ", for calendar:" + SELECTEDCALENDAR);
+	try {
+		console.log("Searching for:" + retcal.selectedcalendar);
+		let data = cfg.calendars.find( ( o ) => o.calendarName === retcal.selectedcalendar);
+		retcal.load(data);
+	}
+	catch (e) {
+		console.log("error loading calendar",e);
+	}
 
+	console.log("INIT todayDate:" + retcal.todayDate.format() + " , endWindowDate:" + retcal.endWindowDate.format() + ", timezone:" + retcal.intimezone + ", for calendar:" + retcal.selectedcalendar);
+
+	console.log("exiting init");
+	return retcal;
 }
 
 /*
@@ -669,55 +296,42 @@ exports.calendar2voice = function(event, context, callback) {
 	// log for testing sake
 	console.log(util.inspect(event, {showHidden: false, depth: null}));
 
-	init(event);
+	var thiscal = init(event);
+	
+	console.log("getting ice");
+	// get the ICS via a promise so that we do not process without one
+	getICS(thiscal.icsurl).then( (caldata)  =>  {
 
-	responseJSON = createReturn(200,'The requested calendar is not available');
+		try {
+			const jdata = ics2json.icsToJson(caldata);
+			eventarray = select_todays_events(jdata, thiscal);
+			eventresponse = process_events(eventarray, thiscal);
+		}
+		catch (e) {
+			console.log("error converting data");
+			eventresponse = "";
+		}
+	
+		responsetext = thiscal.introtext + "For today, " + thiscal.todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
 
-	setupcalendar(SELECTEDCALENDAR.toLowerCase() ).then( (res) =>  {
-
-		if ( res) {
-			// get the ICS via a promise so that we do not process without one
-			getICS(ICSURL).then( (caldata)  =>  {
-
-				try {
-					const jdata = ics2json.icsToJson(caldata);
-					eventarray = select_todays_events(jdata);
-					eventresponse = process_events(eventarray);
-				}
-				catch (e) {
-					console.log("error converting data");
-					eventresponse = "";
-				}
-			
-				responsetext = INTRO + "For today, " + todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
-
-				if ( eventresponse == "" ) {
-					// no meetings fine the next day of meetings after today
-					responsetext += " are no ";
-					responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
-					responsetext +=  ". The next day with ";
-					responsetext += ( CALEVENTTYPE == 'meeting') ? 'meetings' : 'events';
-					responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
-				} else {
-					if ( eventarray.length == 1) {
-						responsetext += ( CALEVENTTYPE == 'meeting') ? " is one meeting." : " is one event.";
-					} else { 
-						responsetext += " are " + eventarray.length.toString();
-						responsetext += ( CALEVENTTYPE == 'meeting') ? " meetings. " : " events. ";
-					}
-					responsetext += eventresponse;
-				}
-				responseJSON = createReturn(200,responsetext); 
-				console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
-				return callback(null, responseJSON);
-			});   
-		} 
-		console.log("not error but and end of res:" + responseJSON);
-		//callback(null, responseJSON);
-	})
-	.catch( (err)  => {
-		console.log("catch error on looking up calendar", err);
-		callback(null, responseJSON);
-	});
-
+		if ( eventresponse == "" ) {
+			// no meetings fine the next day of meetings after today
+			responsetext += " are no ";
+			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
+			responsetext +=  ". The next day with ";
+			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
+			responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
+		} else {
+			if ( eventarray.length == 1) {
+				responsetext += ( thiscal.calendareventtype == 'meeting') ? " is one meeting." : " is one event.";
+			} else { 
+				responsetext += " are " + eventarray.length.toString();
+				responsetext += ( thiscal.calendareventtype == 'meeting') ? " meetings. " : " events. ";
+			}
+			responsetext += eventresponse;
+		}
+		responseJSON = createReturn(200,responsetext, thiscal); 
+		console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
+		return callback(null, responseJSON);
+	});   
 };
