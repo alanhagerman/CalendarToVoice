@@ -6,18 +6,16 @@
  * 
  * Purpose: A flash briefing that given an ICS url to a public 
  *    calendar, will find any events for today and return them 
- *    to be read.  If there are no meetings for today, it will 
- *    read the next day that has meetings.
+ *    to be read.  If there are no events for today, it will 
+ *    return the next day that has events.
  * 
- * this iteration uses hardcoded internal calendar definitions
- * next one will read from a dynamodb table
+ * see config.js for the data for this.  
  * --------------------------------------------------------
  */
 
 const ics2json = require('./icsToJson');
 const uuid = require('uuid');
 const cfg = require('config');
-
 const Calendar = require('containers/calendar');
 const Event = require('containers/event');
 
@@ -35,43 +33,10 @@ var eventresponse = "";
 var responseJSON = "";
 var eventarray = [];
 
-// while looping through event snag the next day in future with events in case its needed
-var nextmeetingdate = {};
-
-/*
- * --------------------------------------------------------
- * function: getICS
- * purpose: retrieve an ICS file from an URL.
- * Uses retrieve and therefore a bunch of dependencies.  its
- * also async but we need to wait since we can't do anything
- * without the file.
- * --------------------------------------------------------
- */
-function getICS(fromurl) {
-	
-	var request = require('request');
-
-	return new Promise((resolve,reject) => {
-		console.log ("Getting ICS");
-
-		request.get(fromurl, function (error, response, body) {
-			if (!error && response.statusCode == 200) {
-				var iCal = body;
-				resolve(iCal);
-			} else {
-				console.log("request.get failed", error);
-				console.log(util.inspect(response, {showHidden: false, depth: null}));
-				reject("Error getting ICS");
-			}
-		});
-
-	});
-}
-
 /*
  * --------------------------------------------------------
  * function: createReturn
- * purpose: creates standard JSON return
+ * purpose: creates standard JSON return to alexa
  * --------------------------------------------------------
  */
 function createReturn(stscode,responsetext, calobj) {
@@ -95,14 +60,15 @@ function createReturn(stscode,responsetext, calobj) {
 		console.log("Error createing response return!",e);
 	}
 
-	// console.log(util.inspect(response, {showHidden: false, depth: null}));
 	return response;
 }
 
 /*
  * --------------------------------------------------------
  * function: select_todays_events
- * purpose: select only standard event objects for today
+ * purpose: convert the iCS JSON for the calendar into a series
+ * of standard event objects and for the ones that are today, 
+ * push to a collecton that can be later sorted and reported
  * --------------------------------------------------------
  */
 function select_todays_events(jdata, thiscal) {
@@ -130,12 +96,11 @@ function select_todays_events(jdata, thiscal) {
 					} 
 
 					// wasnt a today event to be reported, is it a future date? If so is it closer than any other we've seen so far?
-					// nextmeetingdate is GLOBAL and was set based on the window we use for this calendar already
 					if (  stdevent.qualifier ==  stdevent.EVENTISFUTURE ) {
-						let diffToday = nextmeetingdate.diff(thiscal.todayDate,'days');
-						let diffevent = nextmeetingdate.diff(stdevent.nextStart,'days' );
+						let diffToday = thiscal.nextmeetingdate.diff(thiscal.todayDate,'days');
+						let diffevent = thiscal.nextmeetingdate.diff(stdevent.nextStart,'days' );
 						if ( diffevent < diffToday && diffevent > 0 ) {
-							nextmeetingdate = stdevent.nextStart.clone();
+							thiscal.nextmeetingdate = stdevent.nextStart.clone();
 						}
 					}
 				} else {  // not a valid event for us but we don't tell user that
@@ -156,9 +121,7 @@ function select_todays_events(jdata, thiscal) {
 /*
  * --------------------------------------------------------
  * function: process_events.
- * 
- * Pick only the events that start/span/end on today to sort for reading back
- *
+ * format the events that were selected for responding back 
  * --------------------------------------------------------
  */
 function process_events(eventarray, thiscal) {
@@ -219,11 +182,7 @@ function process_events(eventarray, thiscal) {
 
 /*
  * --------------------------------------------------------
- * function: init
- * purpose: grab passed params and init items
- * 
- * This is mostly needed for testing since AWS node caches
- * and you end up with values loaded from previous runs
+ * function: init 
  * --------------------------------------------------------
  */
 function init(event) {
@@ -231,44 +190,19 @@ function init(event) {
 	const evtpointer = ( event && event.queryStringParameters ) ?  event.queryStringParameters : event;
 
 	var retcal = new Calendar();
-	console.log("past new cal new");
 
 	responsetext = "";
 	eventresponse = "";
 	responseJSON = "";
-	nextmeetingdate = {};
 
-	// for testing, see if we got a 'fordate off the API invocation
+	// we can get fordate and forcalendar off the passed API params
 	if ( evtpointer.fordate && evtpointer.fordate > '' && moment(evtpointer.fordate,'YYYY-MM-DD').isValid() ) {
 		retcal.invokedDate = evtpointer.fordate;
-		retcal.todayDate = moment.tz(evtpointer.fordate,retcal.intimezone);
-		retcal.endWindowDate = moment.tz(evtpointer.fordate,retcal.intimezone);
-		retcal.endWindowDate.add(retcal.windowdays,'days');
-	} else {
-		// default to the actual today date
-		retcal.todayDate = moment.tz(retcal.intimezone);
-		retcal.endWindowDate = retcal.todayDate.clone();
-		retcal.endWindowDate.add(retcal.windowdays,'days');
 	}
 
-	console.log(util.inspect(retcal, {showHidden: false, depth: null}));
-
-	// set to midnight for both
-	retcal.todayDate.startOf('day');
-	retcal.endWindowDate.startOf('day');
-
-	// grab the desired calendar off the api
 	if ( evtpointer.forcalendar  && evtpointer.forcalendar > '' ) {
-		console.log("setting selectedcalendar");
 		retcal.selectedcalendar = evtpointer.forcalendar.toLowerCase();
 	} 
-
-	//if ( retcal.intimezone.length > 0 ) {
-	//	moment.tz.setDefault(retcal.intimezone);
-	//}
-
-	// default it for the loop
-	nextmeetingdate = retcal.endWindowDate;
 
 	try {
 		console.log("Searching for:" + retcal.selectedcalendar);
@@ -279,16 +213,12 @@ function init(event) {
 		console.log("error loading calendar",e);
 	}
 
-	console.log("INIT todayDate:" + retcal.todayDate.format() + " , endWindowDate:" + retcal.endWindowDate.format() + ", timezone:" + retcal.intimezone + ", for calendar:" + retcal.selectedcalendar);
-
-	console.log("exiting init");
 	return retcal;
 }
 
 /*
  * --------------------------------------------------------
- * function: main function
- * purpose: 
+ * function: main 
  * --------------------------------------------------------
  */
 exports.calendar2voice = function(event, context, callback) {
@@ -300,7 +230,7 @@ exports.calendar2voice = function(event, context, callback) {
 	
 	console.log("getting ice");
 	// get the ICS via a promise so that we do not process without one
-	getICS(thiscal.icsurl).then( (caldata)  =>  {
+	thiscal.getICSdata().then( (caldata)  =>  {
 
 		try {
 			const jdata = ics2json.icsToJson(caldata);
@@ -320,7 +250,7 @@ exports.calendar2voice = function(event, context, callback) {
 			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
 			responsetext +=  ". The next day with ";
 			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
-			responsetext += " is " + nextmeetingdate.format("dddd, MMMM Do, YYYY");
+			responsetext += " is " + thiscal.nextmeetingdate.format("dddd, MMMM Do, YYYY");
 		} else {
 			if ( eventarray.length == 1) {
 				responsetext += ( thiscal.calendareventtype == 'meeting') ? " is one meeting." : " is one event.";

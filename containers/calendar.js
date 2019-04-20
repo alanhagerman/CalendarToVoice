@@ -12,6 +12,8 @@ var moment = require('moment-timezone');
 // eslint-disable-next-line no-unused-vars
 const util = require('util');
 
+const request = require('request');
+
 module.exports = class Calendar {
     constructor() {
 
@@ -28,7 +30,9 @@ module.exports = class Calendar {
         this._invokedDate = "";
         this._todayDate = "";
         this._endWindowDate = "";
-        
+        this._nextmeetingdate = {};
+
+        this._icsdata = {};
     }
 
     set isvalid(isvalid) {
@@ -37,6 +41,14 @@ module.exports = class Calendar {
 
     get isvalid() {
         return this._isvalid;
+    }
+
+    set nextmeetingdate(nextmeetingdate) {
+        this._nextmeetingdate = nextmeetingdate;
+    }
+
+    get nextmeetingdate() {
+        return this._nextmeetingdate;
     }
 
     set invokedDate(invokedDate) {
@@ -63,10 +75,8 @@ module.exports = class Calendar {
         return this._endWindowDate;
     }
 
-    set selectedcalendar(s) {
-        console.log("setting name to:" + s);
-
-        this._selectedcalendar = s.toLowerCase();
+    set selectedcalendar(selectedcalendars) {
+        this._selectedcalendar = selectedcalendars.toLowerCase();
     }
 
     get selectedcalendar() {
@@ -129,9 +139,15 @@ module.exports = class Calendar {
         return this._calendareventtype;
     }
 
-    load (jsondata) {
-        console.log("Loading calendar from data");
+    set icsdata(icsdata) {
+        this._icsdata = icsdata;
+    }
 
+    get icsdata() {
+        return this._icsdata;
+    }
+
+    load (jsondata) {
         try {
             this.skilltitle = jsondata.skillTitle;
             this.intimezone = jsondata.inTimezone;
@@ -149,14 +165,46 @@ module.exports = class Calendar {
                 this.todayDate.startOf('day');
             }
 
+            this.endWindowDate = this.todayDate.clone();
+            this.endWindowDate.add(this.windowdays,'days');
+            this.endWindowDate.startOf('day');
+
+            this.nextmeetingdate = this.endWindowDate.clone();
+
             this.isvalid = true;
 
         }
         catch (e) {
-            console.log("Unable to load event:", e);
+            console.log("Unable to load calendar from definition:", e);
         }
 
         console.log(util.inspect(this, {showHidden: false, depth: null}));
 
+    }
+
+    /*
+    * --------------------------------------------------------
+    * function: getICS
+    * purpose: retrieve an ICS file from an URL.
+    * Uses retrieve and therefore a bunch of dependencies.  its
+    * also async but we need to wait since we can't do anything
+    * without the file.
+    * --------------------------------------------------------
+    */
+    getICSdata() {
+	
+        return new Promise((resolve,reject) => {
+            request.get(this.icsurl, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    let ical = body;
+                    resolve(ical);
+                } else {
+                    console.log("request.get failed", error);
+                    console.log(util.inspect(response, {showHidden: false, depth: null}));
+                    reject("Error getting ICS");
+                }
+            });
+
+        });
     }
 }

@@ -139,44 +139,38 @@ module.exports = class Event {
         return this._sortkey;
     }
 
+    /*
+     * --------------------------------------------------------
+     * the summary is text that is spoke about the event. We have no control over the 
+     * source text so we need to clean it and remove special characters and things that
+     * Alexa doesn't like. Additionally, we also can make calendar specific adjustments
+     * as in having 757 spken as seven five seven when on startwheels calendar.
+     * --------------------------------------------------------
+     */
     setcleansummary(calobj, summarytext) {
-
-        console.log("start text:" + summarytext);
-        // need to clean the summary to keep alexa speaking ok.  for some special characters we replace
-        // with the english word. whats left should just be letters, digts, comma, colon, semi-colon, space, quote since flash briefings
-        // have to be plain text.
 
         try {
             let pat757 = /([0-9]{3})( |-|\.)*([a-zA-Z])/ug;
 
             this.summary = summarytext.replace("&"," and ");
-            console.log("summary1:" + this.summary);
-
             this.summary = this.summary.replace(/\//gu,' and ');
-            console.log("summary2:" + this.summary);
-            
             if (calobj.selectedcalendar == "startwheelhr") {
-                // in startwheel, we have a number of 757Angels and 757this or 757that
-                // for these we want it talked out not treated as sevenhundredfiftyseven
                 if ( this.summary.match(pat757) ) {
                     this.summary = this.summary.replace(/757/gu,' seven five seven ');
-                    console.log("summary3:" + this.summary);
-
                 }
             }
            this.summary  = this.summary.replace(/([^A-Za-z0-9,'.:;$% ]+)/giu, '');
-           console.log("summary4:" + this.summary);
-
         }
         catch (e) {
-            console.log("Unable toload summary:",e);
+            console.log("Unable to clean summary:",e);
         }
     }
 
     /*
     * --------------------------------------------------------
     * function: eventTimeQualifier
-    * purpose: if start date is today OR if start date < today but end date is today or later
+    * purpose: set an indicator to let us know the status of this event
+    * for example, if start date is today OR if start date < today but end date is today or later
     * --------------------------------------------------------
     */
     eventTimeQualifier(calobj,startmomentobj,endmomentobj) {
@@ -281,12 +275,11 @@ module.exports = class Event {
     * function: fmt_icalendar
     * purpose: update a standard event object from icalendar json
     * 
-    * NOTE: recuring events in iCalendars have a start date and a 
-    * recurring RULE.  We need to apply the rule to the event and then
-    * see if it occurs today or within the next 30 days.  The first 
-    * occurence of the event within that window becomes the eventStartdate.
+    * NOTE: recuring events in iCalendars have a start date and a recurring RULE.  
+    * We need to apply the rule to the event and then see if it occurs today or within the 
+    * next 30 days.  The first occurence of the event within that window becomes the eventStartdate.
     * 
-    *	we also need the DTEND to calculate the length of the event since it could
+    * we also need the DTEND to calculate the length of the event since it could
     * span hours or days.  DTEND is NOT required. The spec says if the DTSTART is a date only
     * the the default DTEND is 1 day later. if the DTSTART has a time component,  the DTEND 
     * default is the exact same time
@@ -301,11 +294,6 @@ module.exports = class Event {
     // remember isvalid is false to start
     fmt_icalendar (calobj, evtjson) {
     
-        console.log(util.inspect(calobj, {showHidden: false, depth: null}));
-
-        console.log(util.inspect(evtjson, {showHidden: false, depth: null}));
-
-        // var retobj = calobj;
         var evtQualifier, lrule, momentNextEndDate, momentNextStartDate, nexteventStartdate;
 
         // need the evtjosn AND we need a summmary which describes the event otherwise skip it
@@ -342,7 +330,7 @@ module.exports = class Event {
             this.setcleansummary(calobj, evtjson.summary);
             
             // usedate = evtjson.startDate;
-            console.log("createevent start:" + this.eventStart.format() + ",  end:" + this.eventEnd.format() + ", summary=" + this.summary);
+            // console.log("createevent start:" + this.eventStart.format() + ",  end:" + this.eventEnd.format() + ", summary=" + this.summary);
 
             // eslint-disable-next-line no-warning-comments
             // TODO: possible bug, can we have a recurring rule on a multi-day event that results in a new event that spans today
@@ -367,7 +355,6 @@ module.exports = class Event {
             }
 
             let uidtouse = uuid.v4();
-            //let sortkey = momentNextStartDate.format('HH:mm') + ":" + summary + ":" + uidtouse;
             let sortkey = this.eventStart.format('HH:mm') + ":" + this.summary + ":" + uidtouse;
 
             this.qualifier = evtQualifier;
@@ -381,7 +368,7 @@ module.exports = class Event {
 
         }
         catch(e) {
-            console.log("error in object creation:",e);
+            console.log("error in event creation:",e);
         }
         
     }

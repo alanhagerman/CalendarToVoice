@@ -1,4 +1,4 @@
-const NEW_LINE = /\r\n|\n|\r/;
+const NEW_LINE = /\r\n|\n|\r/u;
 
 const EVENT = "VEVENT";
 const EVENT_START = "BEGIN";
@@ -19,9 +19,10 @@ const keyMap = {
   [SUMMARY]: "summary",
   [LOCATION]: "location",
   [RRULE]: "rrule",
-  [DURATION]:""
+  [DURATION]:"duration"
 };
 
+// eslint-disable-next-line arrow-parens 
 const clean = string => unescape(string).trim();
 
 function icsToJson (icsData )
@@ -35,6 +36,7 @@ function icsToJson (icsData )
 		const lines = icsData.split(NEW_LINE);
 
 		let isAlarm = false;
+		// eslint-disable-next-line no-plusplus
 		for (let i = 0, iLen = lines.length; i < iLen; ++i) {
 			const line = lines[i];
 			const lineData = line.split(":");  // if summary,may have : inside the summary text!

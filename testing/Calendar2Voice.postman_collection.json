@@ -1,0 +1,915 @@
+{
+	"info": {
+		"_postman_id": "abe5edc8-e964-4e28-a02a-ae5ce46c7432",
+		"name": "Calendar2Voice",
+		"description": "Invoke the calendartovoice API for every calendar supported for a specific day and view the results",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "cityofvirginiabeachvirginia - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4596f5a6-d7dc-4b24-b152-4095b25113ea",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_cityofvirginiabeachvirginia\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_cityofvirginiabeachvirginia\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofvirginiabeachvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofvirginiabeachvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofvirginiabeachvirginia - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e0e1ef1d-9071-45d6-aa63-b36fb6d7003f",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_cityofvirginiabeachvirginia\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_cityofvirginiabeachvirginia\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_cityofvirginiabeachvirginia\");",
+							"// pm.globals.unset(\"prod_titletext_cityofvirginiabeachvirginia\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=cityofvirginiabeachvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofvirginiabeachvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofnewportnewsvirginia - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8b193f6c-cab2-4065-a39c-513a5aa8337a",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_cityofnewportnewsvirginia\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_cityofnewportnewsvirginia\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofnewportnewsvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofnewportnewsvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofnewportnewsvirginia - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "70622bb7-efb0-47a6-8836-077917de2c06",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_cityofnewportnewsvirginia\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_cityofnewportnewsvirginia\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_cityofnewportnewsvirginia\");",
+							"// pm.globals.unset(\"prod_titletext_cityofnewportnewsvirginia\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=cityofnewportnewsvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofnewportnewsvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofhamptonvirginia - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4290744f-7223-4890-a25d-3a8d3f65dad2",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_cityofhamptonvirginia\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_cityofhamptonvirginia\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofhamptonvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofhamptonvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofhamptonvirginia - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e0d5b281-84af-44d1-aee5-c03da3245194",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_cityofhamptonvirginia\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_cityofhamptonvirginia\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_cityofhamptonvirginia\");",
+							"// pm.globals.unset(\"prod_titletext_cityofhamptonvirginia\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=cityofhamptonvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofhamptonvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofnorfolkvirginia - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1fca2a53-f879-4c9d-81c2-b0a6917bc55f",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_cityofnorfolkvirginia\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_cityofnorfolkvirginia\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"citycouncilmeetingsfortoday\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofnorfolkvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofnorfolkvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofnorfolkvirginia - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "722c69bc-2733-45fa-b317-21fcfed7b583",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"citycouncilmeetingsfortoday\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_cityofnorfolkvirginia\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_cityofnorfolkvirginia\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_cityofnorfolkvirginia\");",
+							"// pm.globals.unset(\"prod_titletext_cityofnorfolkvirginia\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=cityofnorfolkvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofnorfolkvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofportsmouthvirginia - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6db1f861-e3a4-47cb-9951-487bdea4d600",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_cityofportsmouthvirginia\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_cityofportsmouthvirginia\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=cityofportsmouthvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofportsmouthvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cityofportsmouthvirginia - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7b2ca48b-a4dc-4500-b688-0b63e3991049",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"publicmeetingsfortoday\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_cityofportsmouthvirginia\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_cityofportsmouthvirginia\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_cityofportsmouthvirginia\");",
+							"// pm.globals.unset(\"prod_titletext_cityofportsmouthvirginia\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=cityofportsmouthvirginia&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "cityofportsmouthvirginia"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "hamptonroadsplanningdistrictcommission - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6ee8a033-c7aa-4933-acee-dbf1d80e6174",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_hamptonroadsplanningdistrictcommission\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_hamptonroadsplanningdistrictcommission\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"herearethehamptonroadsplanningdistrictcommissionevents\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=hamptonroadsplanningdistrictcommission&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "hamptonroadsplanningdistrictcommission"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "hamptonroadsplanningdistrictcommission - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "909bbb82-326c-4c73-95ac-0fd3daf0b782",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"herearethehamptonroadsplanningdistrictcommissionevents\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_hamptonroadsplanningdistrictcommission\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_hamptonroadsplanningdistrictcommission\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_hamptonroadsplanningdistrictcommission\");",
+							"// pm.globals.unset(\"prod_titletext_hamptonroadsplanningdistrictcommission\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=hamptonroadsplanningdistrictcommission&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "hamptonroadsplanningdistrictcommission"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "startwheelhr  - prod - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f64cd04b-731f-4096-9f15-b1f6fdf0b7cf",
+						"exec": [
+							"pm.globals.set(\"prod_maintext_startwheelhr\", pm.response.json().mainText.toLowerCase());",
+							"pm.globals.set(\"prod_titletext_startwheelhr\", pm.response.json().titleText.toLowerCase());",
+							"",
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"businesseventsinhamptonroads\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://41ltqew35k.execute-api.us-east-1.amazonaws.com/production/calendarasvoice?forcalendar=startwheelhr&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"41ltqew35k",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"production",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "startwheelhr"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "startwheelhr - dev - today",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5054f3cb-fae9-4fa3-85f1-58226c069a72",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"valid response started\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.mainText.toLowerCase().split(' ').join('')).to.include(\"businesseventsinhamptonroads\");",
+							"});",
+							"",
+							"pm.test(\"compare responses maintext\", () =>",
+							"    pm.expect(pm.response.json().mainText.toLowerCase()).to.equal(pm.globals.get(\"prod_maintext_startwheelhr\")));",
+							"    ",
+							"pm.test(\"compare responses titletext\", () =>",
+							"    pm.expect(pm.response.json().titleText.toLowerCase()).to.equal(pm.globals.get(\"prod_titletext_startwheelhr\")));",
+							"    ",
+							"",
+							"// pm.globals.unset(\"prod_maintext_startwheelhr\");",
+							"// pm.globals.unset(\"prod_titletext_startwheelhr\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://6l3l0sgo9i.execute-api.us-east-1.amazonaws.com/dev/calendarasvoice?forcalendar=startwheelhr&fordate={{fordate}}",
+					"protocol": "https",
+					"host": [
+						"6l3l0sgo9i",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"calendarasvoice"
+					],
+					"query": [
+						{
+							"key": "forcalendar",
+							"value": "startwheelhr"
+						},
+						{
+							"key": "fordate",
+							"value": "{{fordate}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "315300da-654a-4e72-a7d3-3e36f5ea20dc",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "c6470bce-80d1-4ec1-80d7-1e08110761ad",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "49d8f95d-ed8a-4ac8-92f2-b17320482153",
+			"key": "acityofvirginiabeachvirginia",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
