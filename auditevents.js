@@ -15,7 +15,6 @@
 
 const ics2json = require('./icsToJson');
 
-const uuid = require('uuid');
 const cfg = require('config');
 const Calendar = require('containers/calendar');
 const Event = require('containers/event');
@@ -40,22 +39,16 @@ var eventarray = [];
  * purpose: creates standard JSON return to alexa
  * --------------------------------------------------------
  */
+// eslint-disable-next-line no-unused-vars
 function createReturn(stscode,responsetext, calobj) {
 	
-	const jsonDate = calobj.todayDate.toJSON();
-
 	let response = "";
 
 	try {
 		response = {
 			statusCode: stscode,
-			body: JSON.stringify({
-				uid: uuid.v4(),
-				updateDate: jsonDate,
-				titleText: calobj.skilltitle,
-				mainText: responsetext
-			})
-		};
+			body: responsetext
+		}
 	}
 	catch (e) {
 		console.log("Error createing response return!",e);
@@ -72,9 +65,10 @@ function createReturn(stscode,responsetext, calobj) {
  * push to a collecton that can be later sorted and reported
  * --------------------------------------------------------
  */
-function select_todays_events(jdata, thiscal) {
+function select_audited_events(jdata, thiscal) {
 
-	let arTodaysEvents = [];
+	let arSelectedEvents = [];
+	let arEvents = [];
 	let stdevent = {};
 
 	try {
@@ -88,35 +82,30 @@ function select_todays_events(jdata, thiscal) {
 				stdevent = new Event()
 				stdevent.load(thiscal,oneevent);		
 
-				if ( stdevent.isvalid) {
-					console.log("valid event. nextStart date:" + stdevent.nextStart.format() + " for qualifier:" + stdevent.qualifier );
-
-					// if its for today, save it so we can sort it
-					if ( stdevent.qualifier ==  stdevent.EVENTSTARTSTODAY  || stdevent.qualifier ==  stdevent.EVENTENDSTODAY || stdevent.qualifier ==  stdevent.EVENTSPANSTODAY ) {
-						arTodaysEvents.push(stdevent);
-					} 
-
-					// wasnt a today event to be reported, is it a future date? If so is it closer than any other we've seen so far?
-					if (  stdevent.qualifier ==  stdevent.EVENTISFUTURE ) {
-						let diffToday = thiscal.nextmeetingdate.diff(thiscal.todayDate,'days');
-						let diffevent = thiscal.nextmeetingdate.diff(stdevent.nextStart,'days' );
-						if ( diffevent < diffToday && diffevent > 0 ) {
-							thiscal.nextmeetingdate = stdevent.nextStart.clone();
-						}
-					}
+				if ( stdevent.isvalid && stdevent.eventStart.hour() == 0 && stdevent.eventStart.minute() == 0) {
+					stdevent.msg = "Midnight event";
+					arSelectedEvents.push(stdevent);
 				} else {  // not a valid event for us but we don't tell user that
 					console.log("event entry NOT valid, skipping");
 					console.log(util.inspect(oneevent, {showHidden: false, depth: null}));
 				} 
-			}
 
+				let data = arEvents.find( ( o ) => o.summary === stdevent.summary && o.eventStart === stdevent.eventStart);
+				if ( data) {
+					stdevent.msg = "Duplicate event";
+					arSelectedEvents.push(stdevent);
+				} else {
+					arEvents.push(stdevent);
+				}
+
+			}
 		}); // foreach event
 	}
 	catch (e) {
 		console.log("Error setting object:",e)
 	}
 
-	return arTodaysEvents;
+	return arSelectedEvents;
 }
 
 /*
@@ -125,11 +114,13 @@ function select_todays_events(jdata, thiscal) {
  * format the events that were selected for responding back 
  * --------------------------------------------------------
  */
+
+// eslint-disable-next-line no-unused-vars
 function process_events(eventarray, thiscal) {
 
 	let retmessage = "";
 
-	console.log("Processing events for today");
+	console.log("Processing selected events");
 	if ( eventarray.length > 0) {
 
 		// remember sort mutates the object
@@ -139,41 +130,11 @@ function process_events(eventarray, thiscal) {
 			return 0;
 		});
 		
-		// build our response table for each event. Remember Flash Briefings do NOT support SSML! 
-		// we try to be smart with phrasing to sound more natural but ultimately we are at the mercy 
-		// of the source calendar
-		// !!! Plain text only!!!
-		let cnt = 1;
-		let lasteventStartdate = {};
-
+		// we're building basic HTML response rows in a table
 		eventarray.forEach(function (oneevt) {
-
 			console.log(util.inspect(oneevt, {showHidden: false, depth: null}));
-
-			if ( oneevt.qualifier == oneevt.EVENTSPANSTODAY ) {
-				retmessage += ". All day ";
-				retmessage += ( oneevt.evtEnd == thiscal.todayDate ) ? " until " + oneevt.evtEnd.format('hh:mm A') : "";
-				retmessage += " is " + oneevt.summary + " ";
-			} else {
-				// if we only have a couple events, saying finally seems out of place so lets make sure we have 4
-				retmessage +=  ( cnt > 3 && cnt == eventarray.length ) ?	". Finally, " : "";
-				retmessage +=  ( lasteventStartdate == oneevt.eventStart.format('hh:mm A') ) ? ". Also at " : ". At ";
-
-				if (oneevt.eventStart.hour() == 0 && oneevt.eventStart.minute() == 0) {
-					retmessage += " midnight ";
-				} else if (oneevt.eventStart.hour() == 12 && oneevt.eventStart.minute() == 0) {
-					retmessage += " noon ";
-				} else {
-					retmessage += oneevt.eventStart.format('hh:mm A');
-				}
-			
-				retmessage +=  ( thiscal.calendareventtype == 'meeting') ? ", the " + oneevt.summary + " meets. " : ", is " + oneevt.summary + ". ";
-
-			}
-			cnt += 1;
-			if ( oneevt.qualifier != oneevt.EVENTSPANSTODAY ) {
-				lasteventStartdate = oneevt.eventStart.format('hh:mm A')
-			}
+			// retmessage += "<tr><td>" + oneevt.msg + "</td><td>" + oneevt.summary + "</td><td>" + oneevt.eventStart.format('hh:mm A') + "</td></tr>";
+			retmessage += "'" + oneevt.msg + "','" + oneevt.summary + "','" + oneevt.eventStart.format('YYYY-MM-DD hh:mm A') + "' \n";
 		});
 	}
 
@@ -222,7 +183,7 @@ function init(event) {
  * function: main 
  * --------------------------------------------------------
  */
-exports.calendar2voice = function(event, context, callback) {
+exports.auditevents = function(event, context, callback) {
 
 	// log for testing sake
 	console.log(util.inspect(event, {showHidden: false, depth: null}));
@@ -235,32 +196,17 @@ exports.calendar2voice = function(event, context, callback) {
 
 		try {
 			const jdata = ics2json.icsToJson(caldata);
-			eventarray = select_todays_events(jdata, thiscal);
+			eventarray = select_audited_events(jdata, thiscal);
 			eventresponse = process_events(eventarray, thiscal);
 		}
 		catch (e) {
-			console.log("error converting data");
+			console.log("error converting data",e);
 			eventresponse = "";
 		}
 	
-		responsetext = thiscal.introtext + "For today, " + thiscal.todayDate.format("dddd, MMMM Do, YYYY") + ". There ";
-
-		if ( eventresponse == "" ) {
-			// no meetings fine the next day of meetings after today
-			responsetext += " are no ";
-			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
-			responsetext +=  ". The next day with ";
-			responsetext += ( thiscal.calendareventtype == 'meeting') ? 'meetings' : 'events';
-			responsetext += " is " + thiscal.nextmeetingdate.format("dddd, MMMM Do, YYYY");
-		} else {
-			if ( eventarray.length == 1) {
-				responsetext += ( thiscal.calendareventtype == 'meeting') ? " is one meeting." : " is one event.";
-			} else { 
-				responsetext += " are " + eventarray.length.toString();
-				responsetext += ( thiscal.calendareventtype == 'meeting') ? " meetings. " : " events. ";
-			}
-			responsetext += eventresponse;
-		}
+		//responsetext = "<html><head></head><body><h1>Events that failed audit</h1><table><tr><th>Error Message</th><th>Event Summary</th><th>Event Startdate</th></tr>" + eventresponse + "</table></body></html>";
+		responsetext = eventresponse + "\n";
+	
 		responseJSON = createReturn(200,responsetext, thiscal); 
 		console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
 		return callback(null, responseJSON);

@@ -20,6 +20,7 @@ module.exports = class Event {
     constructor() {
 
         this._isvalid = false;
+        this._msg = "";
 
         this._summary = "";
         this._qualifier = 0;
@@ -137,6 +138,14 @@ module.exports = class Event {
 
     get sortkey() {
         return this._sortkey;
+    }
+
+    set msg(msg) {
+        this._msg = msg;
+    }
+
+    get msg() {
+        return this._msg;
     }
 
     /*

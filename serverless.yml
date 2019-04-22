@@ -23,6 +23,11 @@ functions:
     events:
      - http: GET calendarasvoice
 
+  auditevents:
+    handler: auditevents.auditevents
+    events:
+     - http: GET auditevents
+
 package:
   include:
     - node_modules/**
