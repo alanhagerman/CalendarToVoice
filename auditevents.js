@@ -82,15 +82,17 @@ function select_audited_events(jdata, thiscal) {
 				stdevent = new Event()
 				stdevent.load(thiscal,oneevent);		
 
-				if ( stdevent.isvalid && stdevent.eventStart.hour() == 0 && stdevent.eventStart.minute() == 0) {
-					stdevent.msg = "Midnight event";
-					arSelectedEvents.push(stdevent);
+				if ( stdevent.isvalid ) { 
+					if ( stdevent.eventStart.hour() == 0 && stdevent.eventStart.minute() == 0) {
+						stdevent.msg = "Midnight event";
+						arSelectedEvents.push(stdevent);
+					}
 				} else {  // not a valid event for us but we don't tell user that
 					console.log("event entry NOT valid, skipping");
-					console.log(util.inspect(oneevent, {showHidden: false, depth: null}));
+					console.log(util.inspect(stdevent, {showHidden: false, depth: null}));
 				} 
+				let data = arEvents.find( ( o ) => o.summary === stdevent.summary && o.eventStartString == stdevent.eventStartString);
 
-				let data = arEvents.find( ( o ) => o.summary === stdevent.summary && o.eventStart === stdevent.eventStart);
 				if ( data) {
 					stdevent.msg = "Duplicate event";
 					arSelectedEvents.push(stdevent);
@@ -134,7 +136,7 @@ function process_events(eventarray, thiscal) {
 		eventarray.forEach(function (oneevt) {
 			console.log(util.inspect(oneevt, {showHidden: false, depth: null}));
 			// retmessage += "<tr><td>" + oneevt.msg + "</td><td>" + oneevt.summary + "</td><td>" + oneevt.eventStart.format('hh:mm A') + "</td></tr>";
-			retmessage += "'" + oneevt.msg + "','" + oneevt.summary + "','" + oneevt.eventStart.format('YYYY-MM-DD hh:mm A') + "' \n";
+			retmessage += "'" + oneevt.msg + "','" + oneevt.summary + "','" + oneevt.eventStartString + "' \n";
 		});
 	}
 

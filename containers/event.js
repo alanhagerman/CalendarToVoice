@@ -33,11 +33,12 @@ module.exports = class Event {
         this._nextEnd = "";
         this._sortkey = "";
                     
-        this._EVENTISPAST = 1
-        this._EVENTISFUTURE = 2
-        this._EVENTSTARTSTODAY = 3
-        this._EVENTENDSTODAY = 4
-        this._EVENTSPANSTODAY = 5
+        this._eventStartString = "";
+        this._EVENTISPAST = 1;
+        this._EVENTISFUTURE = 2;
+        this._EVENTSTARTSTODAY = 3;
+        this._EVENTENDSTODAY = 4;
+        this._EVENTSPANSTODAY = 5;
     }
 
     get EVENTISPAST () {
@@ -102,10 +103,15 @@ module.exports = class Event {
 
     set eventStart(eventStart) {
         this._eventStart = eventStart;
+        this._eventStartString = eventStart.format('YYYY-MM-DD hh:mm A')
     }
 
     get eventStart() {
         return this._eventStart;
+    }
+
+    get eventStartString() {
+        return this._eventStartString;
     }
 
     set eventEnd(eventEnd) {
