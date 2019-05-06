@@ -24,14 +24,16 @@ module.exports = class Event {
 
         this._summary = "";
         this._qualifier = 0;
-        this._uid = "";
+        this._uid = uuid.v4();
         this._rrule = "";
         this._eventStart = "";
         this._eventEnd = "";
         this._eventlength = 0;
         this._nextStart = "";
         this._nextEnd = "";
-        this._sortkey = "";
+        // this._sortkey = "";
+        this._alldayevent = false;
+        this._multidayevent = false;
                     
         this._eventStartString = "";
         this._EVENTISPAST = 1;
@@ -61,44 +63,44 @@ module.exports = class Event {
         return this._EVENTSPANSTODAY;
     }  
 
-    set summary(summary) {
-        this._summary = summary;
-    }
-
     get summary() {
         return this._summary;
     }
 
-    set qualifier(qualifier) {
-        this._qualifier = qualifier;
+    set summary(summary) {
+        this._summary = summary;
     }
 
     get qualifier() {
         return this._qualifier;
     }
 
-    set isvalid(isvalid) {
-        this._isvalid = isvalid;
+    set qualifier(qualifier) {
+        this._qualifier = qualifier;
     }
 
     get isvalid() {
         return this._isvalid;
     }
 
-    set uid(uid) {
-        this._uid = uid;
+    set isvalid(isvalid) {
+        this._isvalid = isvalid;
     }
 
     get uid() {
         return this._uid;
     }
 
+    get rrule() {
+        return this._rrule;
+    }
+
     set rrule(rrule) {
         this._rrule = rrule;
     }
 
-    get rrule() {
-        return this._rrule;
+    get eventStart() {
+        return this._eventStart;
     }
 
     set eventStart(eventStart) {
@@ -106,52 +108,67 @@ module.exports = class Event {
         this._eventStartString = eventStart.format('YYYY-MM-DD hh:mm A')
     }
 
-    get eventStart() {
-        return this._eventStart;
-    }
-
     get eventStartString() {
         return this._eventStartString;
-    }
-
-    set eventEnd(eventEnd) {
-        this._eventEnd = eventEnd;
     }
 
     get eventEnd() {
         return this._eventEnd;
     }
 
-    set nextStart(nextStart) {
-        this._nextStart = nextStart;
+    set eventEnd(eventEnd) {
+        this._eventEnd = eventEnd;
     }
 
     get nextStart() {
         return this._nextStart;
     }
 
-    set nextEnd(nextEnd) {
-        this._nextEnd = nextEnd;
+    set nextStart(nextStart) {
+        this._nextStart = nextStart;
     }
 
     get nextEnd() {
         return this._nextEnd;
     }
 
-    set sortkey(sortkey) {
-        this._sortkey = sortkey;
+    set nextEnd(nextEnd) {
+        this._nextEnd = nextEnd;
     }
 
-    get sortkey() {
-        return this._sortkey;
+    get msg() {
+        return this._msg;
     }
 
     set msg(msg) {
         this._msg = msg;
     }
 
-    get msg() {
-        return this._msg;
+    get isalldayevent() {
+        return this._alldayevent;
+    }
+
+    set isalldayevent(isalldayevent) {
+        this._alldayevent = isalldayevent;
+    }
+
+    get ismultidayevent() {
+        try {
+            return  ( this.eventStart.dayOfYear() != this.eventEnd.dayOfYear() );
+        }
+        catch (e) {
+            return false;
+        } 
+    }
+
+    sortkey(seq) {
+        // return this._sortkey;
+        // return  this._msg + ":" + this.eventStart.format('HH:mm') + ":" + this.summary + ":" + this._uid;
+        if (seq == 0) {
+            return  this.msg + ":" + this.summary + ":" + this.eventStartString  + ":" + this.uid;
+        } else {
+            return  this.msg + ":" + this.eventStartString + ":" + this.summary + ":" + this.uid;
+        }
     }
 
     /*
@@ -319,17 +336,21 @@ module.exports = class Event {
             }
     
             if ( evtjson.startDate && ( moment(evtjson.startDate,'YYYYMMDDTHHmmss').isValid() || moment(evtjson.startDate,'YYYYMMDD').isValid() ) ) {
+                this.isalldayevent = ! ( moment(evtjson.startDate,'HHmmss').isValid() && evtjson.startDate.toString().length > 8) ;
                 this.eventStart = moment.tz(evtjson.startDate,calobj.intimezone);
             } else {
                 console.log("Invalid start date");
                 return; 
             }
+            
+            // if ( this.isalldayevent )  console.log("$$$$$$ SET ALL DAY EVENT $$$$$$$$");
 
             if ( evtjson.endDate && moment(evtjson.endDate,'YYYYMMDDTHHmmss').isValid() ) {
                 this.eventEnd =  moment.tz(evtjson.endDate,calobj.intimezone);
             } else {
                 // no enddate.  
                 this.eventEnd = this.eventStart.clone();
+            
                 // eslint-disable-next-line no-warning-comments
                 // TODO: if we have a duration, calculate it
 
@@ -369,15 +390,15 @@ module.exports = class Event {
                 momentNextEndDate = this.eventEnd;
             }
 
-            let uidtouse = uuid.v4();
-            let sortkey = this.eventStart.format('HH:mm') + ":" + this.summary + ":" + uidtouse;
+            // this.uidtouse = uuid.v4();
+            // let sortkey = this.eventStart.format('HH:mm') + ":" + this.summary + ":" + uidtouse;
+            // this.uid = uidtouse;
+            // this.sortkey = sortkey;
 
             this.qualifier = evtQualifier;
-            this.uid = uidtouse;
             this.rrule = lrule;
             this.nextStart = momentNextStartDate;
             this.nextEnd = momentNextEndDate;
-            this.sortkey = sortkey;
 
             this.isvalid = true;
 

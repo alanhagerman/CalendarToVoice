@@ -83,22 +83,39 @@ function select_audited_events(jdata, thiscal) {
 				stdevent.load(thiscal,oneevent);		
 
 				if ( stdevent.isvalid ) { 
+					stdevent.msg = "";
+
 					if ( stdevent.eventStart.hour() == 0 && stdevent.eventStart.minute() == 0) {
-						stdevent.msg = "Midnight event";
-						arSelectedEvents.push(stdevent);
+						var Midev = new Event();
+						Midev.load(thiscal,oneevent);
+						Midev.msg = ( Midev.isalldayevent) ? "All-day event" : "Midnight event";
+						// console.log("$$$ all or midnight:" + JSON.stringify(Midev) );
+						arSelectedEvents.push(Midev);
 					}
+					
+					if ( stdevent.ismultidayevent ) {
+						var mulEv = new Event();
+						mulEv.load(thiscal,oneevent);
+						mulEv.msg = "Muilt-day event";
+						// console.log("$$$ Multil:" + JSON.stringify(mulEv) );
+						arSelectedEvents.push(mulEv);
+					}
+
+					let data = arEvents.find( ( o ) => o.summary === stdevent.summary && o.eventStartString == stdevent.eventStartString);
+
+					if ( data) {
+						var dupEv = new Event();
+						dupEv.load(thiscal,oneevent);
+						dupEv.msg = "Duplicate event";
+						arSelectedEvents.push(dupEv);
+					} else {
+						arEvents.push(stdevent);
+					}
+	
 				} else {  // not a valid event for us but we don't tell user that
 					console.log("event entry NOT valid, skipping");
 					console.log(util.inspect(stdevent, {showHidden: false, depth: null}));
 				} 
-				let data = arEvents.find( ( o ) => o.summary === stdevent.summary && o.eventStartString == stdevent.eventStartString);
-
-				if ( data) {
-					stdevent.msg = "Duplicate event";
-					arSelectedEvents.push(stdevent);
-				} else {
-					arEvents.push(stdevent);
-				}
 
 			}
 		}); // foreach event
@@ -127,8 +144,8 @@ function process_events(eventarray, thiscal) {
 
 		// remember sort mutates the object
 		eventarray.sort( function(a,b) {
-			if ( a.sortkey > b.sortkey) return 1;
-			if ( b.sortkey > a.sortkey) return -1;
+			if ( a.sortkey(0) > b.sortkey(0) ) return 1;
+			if ( b.sortkey(0) > a.sortkey(0) ) return -1;
 			return 0;
 		});
 		
