@@ -26,6 +26,7 @@ module.exports = class Calendar {
         this._windowdays = 30;
         this._calendartype = 'icalendar';
         this._calendareventtype = 'event'; 
+        this._calendarname = "";
             
         this._invokedDate = "";
         this._todayDate = "";
@@ -35,12 +36,20 @@ module.exports = class Calendar {
         this._icsdata = {};
     }
 
+    get isvalid() {
+        return this._isvalid;
+    }
+
     set isvalid(isvalid) {
         this._isvalid = isvalid;
     }
 
-    get isvalid() {
-        return this._isvalid;
+    get calendarname() {
+        return this._calendarname;
+    }
+
+    set calendarname(calendarname) {
+        this._calendarname = calendarname;
     }
 
     set nextmeetingdate(nextmeetingdate) {
@@ -156,6 +165,7 @@ module.exports = class Calendar {
             this.windowdays = jsondata.windowDays;
             this.calendartype = jsondata.calendarType;
             this.calendareventtype = jsondata.calendarEventType;
+            this.calendarname = jsondata.calendarName;
 
             // if we have a timezone we need to reset today to reflect the new timezone.
             // due to midnight rollover.  we won't worry about the endwindow date for now
@@ -191,10 +201,13 @@ module.exports = class Calendar {
     * without the file.
     * --------------------------------------------------------
     */
-    getICSdata() {
-	
+    getICSdata(urltouse="") {
+
+        let targeturl = ( urltouse == "") ? this.icsurl : urltouse;
+        console.log("getting ics from url:" + targeturl);
+
         return new Promise((resolve,reject) => {
-            request.get(this.icsurl, function (error, response, body) {
+            return request.get(targeturl, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     let ical = body;
                     resolve(ical);

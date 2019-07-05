@@ -31,7 +31,7 @@ var moment = require('moment-timezone');
 var responsetext = "";
 var eventresponse = "";
 var responseJSON = "";
-var eventarray = [];
+// var eventarray = [];
 
 /*
  * --------------------------------------------------------
@@ -70,6 +70,8 @@ function select_audited_events(jdata, thiscal) {
 	let arSelectedEvents = [];
 	let arEvents = [];
 	let stdevent = {};
+
+	// console.log("Selecting events:" + JSON.stringify(jdata));
 
 	try {
 		// look at each event.  Pull out ones for today AND save the next day that events
@@ -194,8 +196,74 @@ function init(event) {
 		console.log("error loading calendar",e);
 	}
 
+	console.log("returning:" + JSON.stringify(retcal));
 	return retcal;
 }
+
+function selectevents(caldata, thiscal) {
+
+	let eventarray = [];
+
+	try {
+		const jdata = ics2json.icsToJson(caldata);
+		eventarray = select_audited_events(jdata, thiscal);
+	}
+	catch (e) {
+		console.log("error converting data",e);
+		eventresponse = "";
+	}
+
+	console.log("selectevents returning:" + JSON.stringify(eventarray));
+	return eventarray;
+
+}
+
+
+function getevents(thiscal) {
+
+	return new Promise((resolve) => {
+		console.log("getevents for:" + thiscal.calendarname);
+
+		let evarray = [];
+		let evarraynext = [];
+		let evarrayret = [];
+
+		if (thiscal.calendarname == "startwheelhr" ) {
+
+			var currentDate = moment().startOf('month');
+			var futureMonth = moment(currentDate).add(1, 'M');
+			let nexturl = "https://startwheel.org/events/?ical=1&tribe_display=month&tribe-bar-date=" + futureMonth.format('YYYY') + "-" +futureMonth.format('MM')
+			console.log("Nextmonth url = " + nexturl);
+
+			return thiscal.getICSdata().then( (caldata)  =>  {
+				try {
+					console.log("ICS curmonth returned:" + JSON.stringify(caldata));
+					evarray = selectevents(caldata,thiscal);
+					return thiscal.getICSdata(nexturl).then( (caldatanext)  =>  {
+						console.log("ICS nextmonth returned:" + JSON.stringify(caldata));
+						evarraynext = selectevents(caldatanext,thiscal);
+						evarrayret = evarray.concat(evarraynext)
+						resolve(evarrayret);
+					});
+				}
+				catch (e) {
+					console.log("error converting data",e);
+					eventresponse = "";
+					resolve(evarrayret);
+				}
+			});
+		} else {
+			return thiscal.getICSdata().then( (caldata)  =>  {
+				console.log("ICS curmonth returned:" + JSON.stringify(caldata));
+				let evarrayret = selectevents(caldata,thiscal);
+				resolve(evarrayret);
+			});
+		}
+
+	});
+
+}
+
 
 /*
  * --------------------------------------------------------
@@ -208,26 +276,30 @@ exports.auditevents = function(event, context, callback) {
 	console.log(util.inspect(event, {showHidden: false, depth: null}));
 
 	var thiscal = init(event);
-	
-	console.log("getting ice");
-	// get the ICS via a promise so that we do not process without one
-	thiscal.getICSdata().then( (caldata)  =>  {
+	console.log("cali is:" + JSON.stringify(thiscal));
 
-		try {
-			const jdata = ics2json.icsToJson(caldata);
-			eventarray = select_audited_events(jdata, thiscal);
-			eventresponse = process_events(eventarray, thiscal);
-		}
-		catch (e) {
-			console.log("error converting data",e);
-			eventresponse = "";
-		}
-	
-		//responsetext = "<html><head></head><body><h1>Events that failed audit</h1><table><tr><th>Error Message</th><th>Event Summary</th><th>Event Startdate</th></tr>" + eventresponse + "</table></body></html>";
-		responsetext = eventresponse + "\n";
-	
-		responseJSON = createReturn(200,responsetext, thiscal); 
-		console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
-		return callback(null, responseJSON);
-	});   
+	if ( thiscal.isvalid ) {
+		console.log("getting ICS for:" + thiscal.calendarname);
+
+		getevents(thiscal).then( (eventarray)  =>  {
+			try {
+				eventresponse = process_events(eventarray, thiscal);
+			}
+			catch (e) {
+				console.log("error converting data",e);
+				eventresponse = "";
+			}
+		
+			//responsetext = "<html><head></head><body><h1>Events that failed audit</h1><table><tr><th>Error Message</th><th>Event Summary</th><th>Event Startdate</th></tr>" + eventresponse + "</table></body></html>";
+			responsetext = eventresponse + "\n";
+		
+			responseJSON = createReturn(200,responsetext, thiscal); 
+			console.log(util.inspect(responseJSON, {showHidden: false, depth: null}));
+			return callback(null, responseJSON);
+		});   
+
+	} else {
+		console.log("Calendar was not valid");
+	}
+
 };
