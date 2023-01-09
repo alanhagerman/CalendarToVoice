@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "ics-to-json": "^1.0.0",
-    "luxon": "^1.11.3",
+    "luxon": "^2.5.2",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.23",
     "request": "^2.88.0",
